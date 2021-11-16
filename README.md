@@ -20,8 +20,15 @@ php artisan module:seed Icommercestripe
 ```
 
 ## Configurations
-	- xxxxxx 
-    - xxxxxx
+	- Public Key 
+    - Secret Key
+    - Account Id
+    - Sign Secret (To Webhook Response)
+    - Comision Amount (Application Fee Amount) - Connect Transfer
+    - Minimun Amount ($0.50 Dollars)
 
-## Sandbox
-Account:
+## WebHook URL to Response
+    https://mydomain/api/icommercestripe/v1/response
+
+## Account
+https://dashboard.stripe.com/login
