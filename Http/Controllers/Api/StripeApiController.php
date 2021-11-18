@@ -75,54 +75,32 @@ class StripeApiController extends BaseApiController
 
         try {
             
-            $data['type'] = $attr['type'] ?? 'express'; // Default
-
-            //dd($data);
-
-            // Country
-            if(isset($attr['country']))
-                $data['country'] = $attr['country'];
+            $data['type'] = $attr['type'] ?? 'express';
+            $data['country'] = $attr['country'] ?? 'US';
+            
             // Email
             if(isset($attr['email']))
                 $data['email'] = $attr['email'];
 
-           
-            if($data['type']=="custom"){
+            /*
+            * The recipient ToS agreement is not supported for platforms in US creating accounts in US.
+            */
+            if($data['country']!='US'){
+                
+                $data['capabilities'] =  config('asgard.icommercestripe.config.capabilities');
 
-                // https://stripe.com/docs/connect/cross-border-payouts
-                $data['capabilities'] = [
-                    //'card_payments' => ['requested' => true],
-                    'transfers' => ['requested' => true]
-                ];
-
-                // https://stripe.com/docs/connect/service-agreement-types#recipient
-                $data['tos_acceptance'] = [
-                    'service_agreement' => 'recipient'
-                ];
-
-                // Testing Account
-                $account['object'] = "bank_account";
-                $account['country'] = "CO";
-                $account['currency'] = "COP";
-                $account['routing_number'] = "999";
-                $account['account_number'] = "000123456789";
-                $account['account_type'] = "checking"; //checking, savings, futsu, toza
-                $data['external_account'] = $account;
-
+                $data['tos_acceptance'] = config('asgard.icommercestripe.config.tos_acceptance');
             }
-            
 
-            //dd($data);
-           
             // Create Account
             $account = $stripe->accounts->create($data);
 
             //Response
             $response = $account->id;
 
-        } catch (\Exception $e) {
-
-            \Log::error('Icommercestripe: Create Account - Message: '.$e->getMessage());
+        } catch (Exception $e) {
+            
+            \Log::error('Icommercestripe: Create Account - Message: '.$e->getMessage().'Code: '.$e->getMessage());
             //Message Error
             $status = 500;
             $response = [
@@ -136,7 +114,8 @@ class StripeApiController extends BaseApiController
 
     /**
     *  API - create Link Account
-    * @param 
+    * @param $paymentMethod
+    * @param
     * @return
     */
     public function createLinkAccount($paymentMethod,$attr){
@@ -146,14 +125,20 @@ class StripeApiController extends BaseApiController
         // Create Account
         $accountId = $this->createAccount($stripe,$attr);
 
+        // Validate Error created account
+        if(isset($accountId['errors'])){
+            $response['error'] =  $accountId['errors']; 
+            return $response;
+        }
+
         // Create Link To Account
         \Log::info('Icommercestripe: create Link Account');
         $accountLink = $stripe->accountLinks->create(
           [
             'account' => $accountId,
             'refresh_url' => url('/'),
-            'return_url' => url('/'),
-            'type' => 'account_onboarding',
+            'return_url' => "https://connect.stripe.com/hosted/oauth?success=true",
+            'type' => 'account_onboarding'
           ]
         );   
 
@@ -163,7 +148,8 @@ class StripeApiController extends BaseApiController
 
     /**
     *  API - Retrieve Account
-    * @param 
+    * @param $paymentMethod
+    * @param accountId
     * @return
     */
     public function retrieveAccount($paymentMethod,$accountId){
