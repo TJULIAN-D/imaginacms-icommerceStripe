@@ -32,3 +32,8 @@ php artisan module:seed Icommercestripe
 
 ## Account
 https://dashboard.stripe.com/login
+
+## Connect Accounts - Information
+
+- Required verification information
+https://stripe.com/docs/connect/required-verification-information
