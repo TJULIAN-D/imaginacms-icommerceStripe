@@ -238,10 +238,18 @@ class IcommerceStripeApiController extends BaseApiController
             // Payment Method Configuration
             $paymentMethod = stripeGetConfiguration();
 
-            $response['url'] = $this->stripeApi->createLinkAccount($paymentMethod,$data);
+            $result = $this->stripeApi->createLinkAccount($paymentMethod,$data);
+
+            if(isset($result['error'])){
+                throw new \Exception($result['error'], 500);
+            }else{
+               $response['url'] =  $result;
+            }
+
+            //$response['url'] = $this->stripeApi->createLinkAccount($paymentMethod,$data);
 
         } catch (\Exception $e) {
-            \Log::error("Icommercestripe: Connect - Create Link ".$e->getMessage());
+            \Log::error("Icommercestripe: Connect - Create Link: ".$e->getMessage());
             $status = 500;
             $response = [
                 'errors' => $e->getMessage()
