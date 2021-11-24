@@ -277,7 +277,7 @@ class IcommerceStripeApiController extends BaseApiController
             // Payment Method Configuration
             $paymentMethod = stripeGetConfiguration();
 
-            $responseStripe = $this->stripeApi->retrieveAccount($paymentMethod,$data['accountId']);
+            $responseStripe = $this->stripeApi->retrieveAccount($paymentMethod->options->secretKey,$data['accountId']);
             
             $response = $responseStripe;
 
@@ -302,6 +302,39 @@ class IcommerceStripeApiController extends BaseApiController
         return response()->json($response, $status ?? 200);
 
     }
+
+    /**
+     * 
+     * @param Requests request
+     * @return url
+    */
+    public function connectCreateLoginLink(Request $request){
+        
+        \Log::info('Icommercestripe: Connect - Create Login Link');
+
+        try {
+
+            $data = $request['attributes'] ?? [];//Get data
+
+            // Payment Method Configuration
+            $paymentMethod = stripeGetConfiguration();
+
+            $result = $this->stripeApi->createLoginLink($paymentMethod->options->secretKey,$data['accountId']);
+
+            $response = $result;
+
+        } catch (\Exception $e) {
+            \Log::error("Icommercestripe: Connect - Create Link: ".$e->getMessage());
+            $status = 500;
+            $response = [
+                'errors' => $e->getMessage()
+            ];
+        }
+
+        return response()->json($response, $status ?? 200);
+
+    }
+
 
     /**
     * Response
@@ -340,5 +373,48 @@ class IcommerceStripeApiController extends BaseApiController
         return response()->json($response, $status ?? 200);
 
     }
+
+    /**
+     * 
+     * @param Requests request
+     * @return url
+    */
+    public function connectGetCountry(Request $request){
+        
+        \Log::info('Icommercestripe: Connect - Get Country');
+
+        try {
+
+            $data = $request['attributes'] ?? [];//Get data
+
+            // Payment Method Configuration
+            $paymentMethod = stripeGetConfiguration();
+
+            $responseStripe = $this->stripeApi->retrieveCountry($paymentMethod->options->secretKey,$data['countryCode'] ?? false);
+
+            if(!isset($data['countryCode']) && count($responseStripe['data'])>0){
+
+                $response['data'] = [
+                    'countries' => $responseStripe['data'],
+                    'count' => count($responseStripe['data'])
+                ];
+
+            }else{
+                $response = $responseStripe; 
+            }
+
+        } catch (\Exception $e) {
+            \Log::error("Icommercestripe: Connect - Get Country ".$e->getMessage());
+            $status = 500;
+            $response = [
+                'errors' => $e->getMessage()
+            ];
+        }
+
+        return response()->json($response, $status ?? 200);
+
+    }
+
+
    
 }

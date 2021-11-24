@@ -18,7 +18,7 @@ class StripeApiController extends BaseApiController
 
    
     private $stripeService;
-
+   
     public function __construct(StripeService $stripeService){
         $this->stripeService = $stripeService;
     }
@@ -147,16 +147,51 @@ class StripeApiController extends BaseApiController
     }
 
     /**
+    *  API - create Login
+    * @param $paymentMethod
+    * @param
+    * @return
+    */
+    public function createLoginLink($secretKey,$accountId){
+
+        $stripe = new \Stripe\StripeClient($secretKey);
+
+        $result = $stripe->accounts->createLoginLink($accountId,[]);
+        
+        return $result;
+        
+    }
+
+    /**
     *  API - Retrieve Account
     * @param $paymentMethod
     * @param accountId
     * @return
     */
-    public function retrieveAccount($paymentMethod,$accountId){
+    public function retrieveAccount($secretKey,$accountId){
 
-        $stripe = new \Stripe\StripeClient($paymentMethod->options->secretKey);
+        $stripe = new \Stripe\StripeClient($secretKey);
 
         $result = $stripe->accounts->retrieve($accountId,[]);
+
+        return $result;
+        
+    }
+
+    /**
+    *  API - Retrieve Country or All Countries
+    * @param $paymentMethod
+    * @param accountId
+    * @return
+    */
+    public function retrieveCountry($secretKey,$countryCode=false){
+
+        $stripe = new \Stripe\StripeClient($secretKey);
+
+        if($countryCode)
+            $result = $stripe->countrySpecs->retrieve($countryCode, []);
+        else
+            $result = $stripe->countrySpecs->all(['limit' => 100]);
 
         return $result;
         

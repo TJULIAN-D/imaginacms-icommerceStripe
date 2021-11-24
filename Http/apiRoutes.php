@@ -14,19 +14,38 @@ $router->group(['prefix' => 'icommercestripe/v1'], function (Router $router) {
         'uses' => 'IcommerceStripeApiController@response',
     ]);
 
-    $router->post('/connect/create-link', [
-        'as' => 'icommercestripe.api.stripe.connectCreateLink',
+
+    /*
+    * Connect Routes
+    */
+    $router->group(['prefix' => 'connect'], function (Router $router) {
+
+        $router->post('/create-link', [
+        'as' => 'icommercestripe.api.stripe.connect.CreateLink',
         'uses' => 'IcommerceStripeApiController@connectCreateLink',
-    ]);
+        ]);
 
-    $router->get('/connect/account/get', [
-        'as' => 'icommercestripe.api.stripe.connect.getAccount',
-        'uses' => 'IcommerceStripeApiController@connectGetAccount',
-    ]);
+        $router->get('/account/get', [
+            'as' => 'icommercestripe.api.stripe.connect.getAccount',
+            'uses' => 'IcommerceStripeApiController@connectGetAccount',
+        ]);
 
-    $router->post('/connect/account-response', [
-        'as' => 'icommercestripe.api.stripe.accountResponse',
-        'uses' => 'IcommerceStripeApiController@connectAccountResponse',
-    ]);
+        $router->post('/account-response', [
+            'as' => 'icommercestripe.api.stripe.connect.accountResponse',
+            'uses' => 'IcommerceStripeApiController@connectAccountResponse',
+        ]);
+
+        $router->post('/create-login-link', [
+            'as' => 'icommercestripe.api.stripe.connect.CreateLoginLink',
+            'uses' => 'IcommerceStripeApiController@connectCreateLoginLink',
+        ]);
+
+        $router->get('/country/get', [
+            'as' => 'icommercestripe.api.stripe.connect.getCountry',
+            'uses' => 'IcommerceStripeApiController@connectGetCountry',
+        ]);
+
+    });
+   
 
 });
