@@ -30,7 +30,9 @@ class StripeService
     ];
 
 
-  
+    //Testing Values OJOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+    $amount = 10000;//100$
+     
     // All Params
 		$params = array(
       'customer_email' => $order->email,
@@ -38,13 +40,13 @@ class StripeService
 			'line_items' => [[
         'name' => stripeGetOrderDescription($order),
         'amount' => $amount,
-        'currency' => $order->currency_code,
+        'currency' => 'USD',//$order->currency_code,
         'quantity' => 1,
       ]],
       'payment_intent_data' => [
         'application_fee_amount' => $applicationFeeAmount,
           'transfer_data' => [
-            'destination' => '', //Account Connected
+            'destination' => 'acct_1JxGAK2aQQK2OIaa', //Account Connected
         ],
         'description' => stripeGetOrderDescription($order),
         'metadata' => $metaData
