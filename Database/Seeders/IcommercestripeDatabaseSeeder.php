@@ -36,6 +36,7 @@ class IcommercestripeDatabaseSeeder extends Seeder
             $options['accountId'] = null;
             $options['signSecret'] = null;
             $options['mode'] = "sandbox";
+            $options['connectCountries'] = null;
             $options['comisionAmount'] = 0;
             $options['minimunAmount'] = 4000;
             $options['maximumAmount'] = null;
@@ -46,18 +47,25 @@ class IcommercestripeDatabaseSeeder extends Seeder
             $params = array(
               'name' => $name,
               'status' => 1,
-              'options' => $options
+              'options' => $options,
+              'payout' => 1
             );
             $paymentMethod = PaymentMethod::create($params);
 
             $this->addTranslation($paymentMethod,'en',$titleTrans,$descriptionTrans);
             $this->addTranslation($paymentMethod,'es',$titleTrans,$descriptionTrans);
 
+            //Seed Form Connect
+            //$this->call(IcommercestripeFormConnectSeeder::class,false,['paymentMethod' => $result]);
+
         }else{
 
             $this->command->alert("This method has already been installed !!");
 
         }
+
+        //Seed Form Connect
+        $this->call(IcommercestripeFormConnectSeeder::class,false,['paymentMethod' => $result]);
    
     }
 

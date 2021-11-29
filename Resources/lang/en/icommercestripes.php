@@ -24,6 +24,7 @@ return [
         'signSecret' => 'Sign Secret to Webhook',
         'comisionAmount' => 'Comision Amount',
         'minimunAmount' => 'Minimum Amount ($0.50)',
+        'connectCountries' => 'Countries enabled for connect accounts',
     ],
     'form' => [
     ],

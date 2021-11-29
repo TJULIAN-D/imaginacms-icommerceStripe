@@ -24,6 +24,7 @@ return [
         'signSecret' => 'Sign Secret to Webhook',
         'comisionAmount' => 'Monto de la Comision por transaccion (Application Fee Amount)',
         'minimunAmount' => 'Monto Minimo ($0.50 centavos de dolar)',
+        'connectCountries' => 'Paises habilitados para cuentas connect',
     ],
     'form' => [
     ],

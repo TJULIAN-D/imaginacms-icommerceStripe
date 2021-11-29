@@ -42,6 +42,9 @@ class IcommercestripeServiceProvider extends ServiceProvider
         $this->publishConfig('icommercestripe', 'config');
         $this->publishConfig('icommercestripe', 'crud-fields');
 
+        $this->mergeConfigFrom($this->getModuleConfigFilePath('icommercestripe', 'settings'), "asgard.icommercestripe.settings");
+        $this->mergeConfigFrom($this->getModuleConfigFilePath('icommercestripe', 'settings-fields'), "asgard.icommercestripe.settings-fields");
+
         $this->loadMigrationsFrom(__DIR__ . '/../Database/Migrations');
     }
 
