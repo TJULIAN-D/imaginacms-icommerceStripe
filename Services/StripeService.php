@@ -9,12 +9,47 @@ class StripeService
 
 	}
 
+  
   /**
   * Make Configuration
   * @param 
   * @return Array 
   */
-	public function makeConfigurationToGenerateLink($paymentMethod,$order,$transaction){
+  public function makeConfigurationToGenerateLink($paymentMethod,$order,$transaction){
+        
+   
+    // Meta Data
+    $metaData = [
+      "orderId" => $order->id,
+      "transactionId" => $transaction->id
+    ];
+
+    // All Params
+    $params = array(
+      'customer_email' => 'wavutes@gmail.com', //$order->email,
+      'payment_method_types' => ['card'],
+      'line_items' => $this->getLineItems($order),
+      'payment_intent_data' => [
+        'transfer_group' => stripeGetTransferGroup($order->id,$transaction->id),
+        'description' => stripeGetOrderDescription($order),
+        'metadata' => $metaData
+      ],
+      'mode' => 'payment',
+      'success_url' => $order->url,
+      'cancel_url' => url('/'),
+      'metadata' => $metaData
+    );
+
+    return $params;
+
+  }
+
+  /**
+  * Make Configuration
+  * @param 
+  * @return Array 
+  */
+	public function makeConfigurationToGenerateLinkDestinationCharge($paymentMethod,$order,$transaction){
         
     //All API requests expect amounts to be provided in a currency’s smallest unit
     $amount = $order->total * 100;
@@ -29,24 +64,20 @@ class StripeService
       "transactionId" => $transaction->id
     ];
 
-
-    //Testing Values OJOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
-    $amount = 10000;//100$
-     
     // All Params
 		$params = array(
-      'customer_email' => $order->email,
+      'customer_email' => "wavutes@gmail.com",
 			'payment_method_types' => ['card'],
 			'line_items' => [[
         'name' => stripeGetOrderDescription($order),
         'amount' => $amount,
-        'currency' => 'USD',//$order->currency_code,
+        'currency' => $order->currency_code,
         'quantity' => 1,
       ]],
       'payment_intent_data' => [
         'application_fee_amount' => $applicationFeeAmount,
           'transfer_data' => [
-            'destination' => 'acct_1JxGAK2aQQK2OIaa', //Account Connected
+            'destination' => 'acct_1JxG0B2aOfu6i4RG', //Account Connected
         ],
         'description' => stripeGetOrderDescription($order),
         'metadata' => $metaData
@@ -102,6 +133,39 @@ class StripeService
       return $details; 
 
   }
+
+
+  /**
+  * Get Line Items
+  * @param 
+  * @return Int 
+  */
+  public function getLineItems($order){
+
+    $items = [];
+    foreach ($order->orderItems as $key => $item) {
+
+      // AMOUUUNTT TESTTTTTTT ===================================
+      //All API requests expect amounts to be provided in a currency’s smallest unit
+      // $amount = $item->price * 100;
+      $amount = 50 * 100; // 50$
+
+      $itemInfor['price_data'] = [
+        'currency' => 'USD',//$order->currency_code,
+        'product_data' => [
+          'name' => $item->product->name,
+          'metadata' => ['id'=>$item->product->id]
+        ],
+        'unit_amount' => $amount
+      ];
+      $itemInfor['quantity'] = $item->quantity;
+      array_push($items, $itemInfor);
+    }
+
+    return $items;
+
+  }
+
     
 
 }

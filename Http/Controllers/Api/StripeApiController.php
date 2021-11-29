@@ -49,7 +49,7 @@ class StripeApiController extends BaseApiController
 
         } catch (\Exception $e) {
 
-            \Log::error('Icommercestripe: Generate Link - Message: '.$e->getMessage());
+            \Log::error('Icommercestripe: Generate Link - Message: '.$e->getMessage().' - File: '.$e->getFile().' - Line: '.$e->getLine());
 
             //Message Error
             $status = 500;
@@ -100,7 +100,7 @@ class StripeApiController extends BaseApiController
 
         } catch (Exception $e) {
             
-            \Log::error('Icommercestripe: Create Account - Message: '.$e->getMessage().'Code: '.$e->getMessage());
+            \Log::error('Icommercestripe: Create Account - Message: '.$e->getMessage());
             //Message Error
             $status = 500;
             $response = [

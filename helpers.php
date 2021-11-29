@@ -19,9 +19,9 @@ if (!function_exists('stripeGetConfiguration')) {
 }
 
 /**
-* Decript url to get data   
-* @param  $eUrl
-* @return array
+*   
+* @param  
+* @return
 */
 if (!function_exists('stripeGetOrderDescription')) {
 
@@ -30,6 +30,37 @@ if (!function_exists('stripeGetOrderDescription')) {
         $description = "Orden #{$order->id} - {$order->first_name} {$order->last_name}";
         
         return  $description;
+
+    }
+}
+
+/**
+*    
+* @param 
+* @return
+*/
+if (!function_exists('stripeGetTransferGroup')) {
+
+    function stripeGetTransferGroup($orderId,$transactionId){
+
+        $description = "order-".$orderId."-transaction-".$transactionId;
+        
+        return  $description;
+
+    }
+}
+
+/**
+*    
+* @param 
+* @return
+*/
+if (!function_exists('stripeGetInforTransferGroup')) {
+
+    function stripeGetInforTransferGroup($transferGroup){
+
+        $infor = explode('-',$transferGroup);
+        return  $infor;
 
     }
 }

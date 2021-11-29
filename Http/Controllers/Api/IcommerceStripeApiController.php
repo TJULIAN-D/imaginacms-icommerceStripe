@@ -93,6 +93,8 @@ class IcommerceStripeApiController extends BaseApiController
      */
     public function init(Request $request){
       
+        \Log::info('Icommercestripe: INIT - '.time());
+
         try {
             
             
@@ -109,7 +111,7 @@ class IcommerceStripeApiController extends BaseApiController
             // Order
             $order = $this->order->find($orderID);
             $statusOrder = 1; // Processing
-
+            
             // Validate minimum amount order
             if(isset($paymentMethod->options->minimunAmount) && $order->total<$paymentMethod->options->minimunAmount)
               throw new \Exception(trans("icommercestripe::icommercestripes.messages.minimum")." :".$paymentMethod->options->minimunAmount, 204);
@@ -186,37 +188,19 @@ class IcommerceStripeApiController extends BaseApiController
 
         // Check Event Type
         if(isset($event->type)){
+            \Log::info('Icommercestripe: Response - Event Type: '.$event->type);
 
-            // Get all infor about status    
-            $details = $this->stripeService->getStatusDetail($event);
-
-            if(isset($details['orderId'])){
-
-                \Log::info('Icommercestripe: Response - Updating Order: '.$details['orderId']);
-
-                /*
-                // Update Transaction
-                $transaction = $this->validateResponseApi(
-                    $this->transactionController->update($details['transactionId'],new Request([
-                        'status' =>  $details['newStatus']
-                    ]))
-                );
-
-                // Update Order Process
-                $orderUP = $this->validateResponseApi(
-                    $this->orderController->update($details['orderId'],new Request(
-                        ["attributes" =>[
-                            'status_id' => $details['newStatus']
-                        ]
-                    ]))
-                );
-                */
+            if($event->data->object->object=="checkout.session"){
+                $this->orderProcess($event);
             }
-           
+            if($event->data->object->object=="charge"){
+                $this->chargesProcess($event,$paymentMethod);
+            }
+
         }
         
         
-        \Log::info('Icommercestripe: Response - END');
+        \Log::info('Icommercestripe: Response - END ');
 
         return response()->json($response, $status ?? 200);
        
@@ -414,6 +398,106 @@ class IcommerceStripeApiController extends BaseApiController
         return response()->json($response, $status ?? 200);
 
     }
+
+    /**
+     * 
+     * @param Requests request
+     * @return url
+    */
+    public function orderProcess($event){
+
+        \Log::info('Icommercestripe: Response - Order Process - INIT - '.time());
+        /*
+        // Get all infor about status    
+        $details = $this->stripeService->getStatusDetail($event); 
+
+        if(isset($details['orderId'])){
+
+            \Log::info('Icommercestripe: Response - Updating Order: '.$details['orderId']);
+
+                
+            // Update Transaction
+            $transaction = $this->validateResponseApi(
+                $this->transactionController->update($details['transactionId'],new Request([
+                    'status' =>  $details['newStatus']
+                ]))
+            );
+
+            // Update Order Process
+            $orderUP = $this->validateResponseApi(
+                $this->orderController->update($details['orderId'],new Request(
+                    ["attributes" =>[
+                            'status_id' => $details['newStatus']
+                    ]
+                ]))
+            );
+                
+        }
+        */
+        \Log::info('Icommercestripe: Response - Order Process - END - '.time());
+
+    }
+
+    /**
+    * Response
+    * @param Requests request
+    * @return route
+    */
+    public function chargesProcess($event,$paymentMethod){
+
+        // Get Charge Infor
+        $charge = $event->data->object;
+        \Log::info('Icommercestripe: Response - Charge Process - Id: '.$charge->id);
+        \Log::info('Icommercestripe: Response - Charge Process - Transfer Group: '.$charge->transfer_group);
+
+        //Get order id from transfer group
+        $infor = stripeGetInforTransferGroup($charge->transfer_group);
+        $order = $this->order->find($infor[1]);
+
+        
+        /*
+        * Create Transfer to each product
+        */
+        \Stripe\Stripe::setApiKey($paymentMethod->options->secretKey);
+
+        $description = stripeGetOrderDescription($order);
+
+        foreach ($order->orderItems as $key => $item) {
+
+            // DESTINATION TESTTTTTTT ===================================
+            if($key==0)
+                $destination = "acct_1K0AwA2YGSG5OMQL"; //USA
+            if($key==1)
+                $destination = "acct_1K0AzB2Y6JblUJSo"; //colombia
+            
+            // AMOUUUNTT TESTTTTTTT ===================================
+            //$amount = $item->price * 100;
+            $amount = 1000;//10$
+
+            //FALTARIA EL VALOR DE LA COMISION
+            //Se puede agregar como infor en la meta data
+
+            try{
+
+                $transfer = \Stripe\Transfer::create([
+                      'amount' => $amount,
+                      'currency' => 'usd', //$order->currency_code
+                      'source_transaction' => $charge->id,
+                      'destination' => $destination,//USA
+                      'transfer_group' => $charge->transfer_group,
+                      'description' => $description.' - Transfer'
+                ]);
+
+                \Log::info('Icommercestripe: Response - Created Transfer to: '.$destination); 
+
+            } catch (Exception $e) {
+                \Log::error('Icommercestripe: Response - Transfer - Message: '.$e->getMessage());
+            }
+
+        }
+
+    }
+
 
 
    
