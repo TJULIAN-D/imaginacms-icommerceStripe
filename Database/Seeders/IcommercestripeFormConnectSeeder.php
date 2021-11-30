@@ -6,6 +6,9 @@ use Illuminate\Database\Seeder;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Icommerce\Entities\PaymentMethod;
 
+//Events
+use Modules\Iforms\Events\SyncFormeable;
+
 class IcommercestripeFormConnectSeeder extends Seeder
 {
 
@@ -45,6 +48,8 @@ class IcommercestripeFormConnectSeeder extends Seeder
                 "active" => true
             ]);
 
+
+
             $fieldsBlock = $blockRepository->create([
                 "form_id" => $form->id,
                 "name" => "fields"
@@ -78,6 +83,9 @@ class IcommercestripeFormConnectSeeder extends Seeder
               "type" => 5,
               "name" => "country",
               'options' => [
+                'props' => [
+                  'useChips' => true
+                ],
                 'loadOptions' => [
                   'apiRoute' => 'ilocations/v2/countries',
                   'select' => ['label' => 'title', 'id' => 'iso2'],
@@ -93,9 +101,8 @@ class IcommercestripeFormConnectSeeder extends Seeder
             ]);
 
         }
-        
-       
 
+        event( new SyncFormeable($paymentMethod,["form_id" => $form->id]));
    
     }
 
