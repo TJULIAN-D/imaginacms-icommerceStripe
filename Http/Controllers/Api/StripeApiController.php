@@ -69,9 +69,11 @@ class StripeApiController extends BaseApiController
     * @param 
     * @return
     */
-    public function createAccount($stripe,$attr){
+    public function createAccount($paymentMethod,$attr){
 
         \Log::info('Icommercestripe: create Account');
+
+        $stripe = new \Stripe\StripeClient($paymentMethod->options->secretKey);
 
         try {
             
@@ -93,10 +95,7 @@ class StripeApiController extends BaseApiController
             }
 
             // Create Account
-            $account = $stripe->accounts->create($data);
-
-            //Response
-            $response = $account->id;
+            $response = $stripe->accounts->create($data);
 
         } catch (Exception $e) {
             
@@ -118,21 +117,23 @@ class StripeApiController extends BaseApiController
     * @param
     * @return
     */
-    public function createLinkAccount($paymentMethod,$attr){
+    public function createLinkAccount($paymentMethod,$accountId){
+
+        \Log::info('Icommercestripe: create Link Account');
 
         $stripe = new \Stripe\StripeClient($paymentMethod->options->secretKey);
 
         // Create Account
-        $accountId = $this->createAccount($stripe,$attr);
+        //$accountId = $this->createAccount($stripe,$attr);
 
         // Validate Error created account
+        /*
         if(isset($accountId['errors'])){
             $response['error'] =  $accountId['errors']; 
             return $response;
         }
+        */
 
-        // Create Link To Account
-        \Log::info('Icommercestripe: create Link Account');
         $accountLink = $stripe->accountLinks->create(
           [
             'account' => $accountId,
@@ -152,9 +153,11 @@ class StripeApiController extends BaseApiController
     * @param
     * @return
     */
-    public function createLoginLink($secretKey,$accountId){
+    public function createLoginLink($paymentMethod,$accountId){
 
-        $stripe = new \Stripe\StripeClient($secretKey);
+        \Log::info('Icommercestripe: create Login Link');
+
+        $stripe = new \Stripe\StripeClient($paymentMethod->options->secretKey);
 
         $result = $stripe->accounts->createLoginLink($accountId,[]);
         

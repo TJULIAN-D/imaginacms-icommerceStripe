@@ -18,9 +18,9 @@ $router->group(['prefix' => 'icommercestripe/v1'], function (Router $router) {
     /*
     * Connect Routes
     */
-    $router->group(['prefix' => 'connect'], function (Router $router) {
+    $router->group(['prefix' => 'payout/connect'], function (Router $router) {
 
-        $router->post('/create-link', [
+        $router->post('/', [
         'as' => 'icommercestripe.api.stripe.connect.CreateLink',
         'uses' => 'IcommerceStripeApiController@connectCreateLink',
         ]);

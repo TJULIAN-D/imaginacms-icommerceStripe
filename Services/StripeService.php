@@ -5,8 +5,10 @@ namespace Modules\Icommercestripe\Services;
 class StripeService
 {
 
-	public function __construct(){
+  private $fieldRepository;
 
+	public function __construct(){
+    $this->fieldRepository = app("Modules\Iprofile\Repositories\FieldRepository");
 	}
 
   
@@ -163,6 +165,58 @@ class StripeService
     }
 
     return $items;
+
+  }
+
+
+  /**
+  * 
+  * @param 
+  * @return Int 
+  */
+  public function findPayoutConfigUser(){
+
+    //Data
+    $payoutConfigName = "payoutStripeConfig";
+    $userId = \Auth::check()->id ?? 1; // Just Testing
+
+    // Check field for this user and name field
+    $model = $this->fieldRepository
+    ->where('name','=',$payoutConfigName)
+    ->where('user_id', '=', $userId)
+    ->first();
+
+    return $model;
+
+  }
+  /**
+  * 
+  * @param 
+  * @return Int 
+  */
+  public function syncDataUserField($payoutConfigValue){
+
+     //Data
+    $payoutConfigName = "payoutStripeConfig";
+    $userId = \Auth::check()->id ?? 1; // Just Testing
+
+    // Data Field
+    $dataField = [
+      'user_id' => $userId, 
+      'name' => $payoutConfigName,
+      'value' => $payoutConfigValue
+    ];
+
+    $modelExist = $this->findPayoutConfigUser();
+
+    // Create or Update
+    if($modelExist)
+      $result = $this->fieldRepository->update($modelExist,$dataField);
+    else
+      $result = $this->fieldRepository->create($dataField);
+    
+
+    return $result;
 
   }
 

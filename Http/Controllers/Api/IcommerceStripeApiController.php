@@ -215,6 +215,8 @@ class IcommerceStripeApiController extends BaseApiController
         
         \Log::info('Icommercestripe: Connect - Create Link');
 
+        $response['status'] = "success";
+
         try {
 
             $data = $request['attributes'] ?? [];//Get data
@@ -222,21 +224,47 @@ class IcommerceStripeApiController extends BaseApiController
             // Payment Method Configuration
             $paymentMethod = stripeGetConfiguration();
 
-            $result = $this->stripeApi->createLinkAccount($paymentMethod,$data);
+            // Check if user has a payoutStripeConfig
+            $userConfig = $this->stripeService->findPayoutConfigUser();
 
-            if(isset($result['error'])){
-                throw new \Exception($result['error'], 500);
+            
+            if(is_null($userConfig)){
+
+                // Create Account
+                $account = $this->stripeApi->createAccount($paymentMethod,$data);
+
+                $accountId = $account->id;
+
+                $response["title"] = "Tu cuenta Connect ha sido creada";
+
+                // Save infor in User Profile Field
+                $fieldCreated = $this->stripeService->syncDataUserField(['accountId'=> $accountId]);
             }else{
-               $response['url'] =  $result;
+
+                $response["title"] = "Ya posees una cuenta Connect";
+
+                // Get account Id from Field
+                $accountId = $userConfig->value->accountId;
             }
 
-            //$response['url'] = $this->stripeApi->createLinkAccount($paymentMethod,$data);
+            // Create Account Link
+            $accountLink = $this->stripeApi->createLinkAccount($paymentMethod,$accountId);
+
+            //Response
+            $response["description"] = "Debes verificar los datos de tu cuenta para poder recibir pagos. Para eso haz click en el siguiente enlace ".$accountLink;
+
+            //Data
+            $response['data'] = [
+                'accountRegisterLink' => $accountLink
+            ];
 
         } catch (\Exception $e) {
             \Log::error("Icommercestripe: Connect - Create Link: ".$e->getMessage());
             $status = 500;
             $response = [
-                'errors' => $e->getMessage()
+                'status' => "error",
+                'title' => "Ha ocurrido un error",
+                'description' => $e->getMessage()
             ];
         }
 
@@ -263,16 +291,20 @@ class IcommerceStripeApiController extends BaseApiController
 
             $responseStripe = $this->stripeApi->retrieveAccount($paymentMethod->options->secretKey,$data['accountId']);
             
-            $response = $responseStripe;
 
-            // Response
-            /*
-            $response['data'] = [
-                'email' => $responseStripe->email,
-                'chargesEnabled' => $responseStripe->charges_enabled,// Pagos
-                'payoutsEnabled' => $responseStripe->payouts_enabled // Transferencias
-            ];
-            */
+            if(isset($data['withoutFormat'])){
+                $response = $responseStripe; 
+            }else{
+               
+               $response['data'] = [
+                    'email' => $responseStripe->email,
+                    'details_submitted' => $responseStripe->details_submitted,
+                    'chargesEnabled' => $responseStripe->charges_enabled,// Pagos
+                    'payoutsEnabled' => $responseStripe->payouts_enabled // Transferencias
+                ];  
+                
+            }
+            
             
 
         } catch (\Exception $e) {
@@ -303,7 +335,7 @@ class IcommerceStripeApiController extends BaseApiController
             // Payment Method Configuration
             $paymentMethod = stripeGetConfiguration();
 
-            $result = $this->stripeApi->createLoginLink($paymentMethod->options->secretKey,$data['accountId']);
+            $result = $this->stripeApi->createLoginLink($paymentMethod,$data['accountId']);
 
             $response = $result;
 
