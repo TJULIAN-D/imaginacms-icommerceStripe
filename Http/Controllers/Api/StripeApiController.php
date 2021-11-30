@@ -137,11 +137,11 @@ class StripeApiController extends BaseApiController
         $accountLink = $stripe->accountLinks->create(
           [
             'account' => $accountId,
-            'refresh_url' => url('/'),
-            'return_url' => "https://connect.stripe.com/hosted/oauth?success=true",
+            'refresh_url' => route('icommercestripe.connect.refresh.url'),
+            'return_url' => url('/'),//"https://connect.stripe.com/hosted/oauth?success=true",
             'type' => 'account_onboarding'
           ]
-        );   
+        ); 
 
         return $accountLink->url;
         

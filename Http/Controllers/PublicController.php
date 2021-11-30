@@ -12,6 +12,9 @@ use Modules\Core\Http\Controllers\BasePublicController;
 use Modules\Icommerce\Repositories\TransactionRepository;
 use Modules\Icommerce\Repositories\OrderRepository;
 
+// Api
+use Modules\Icommercestripe\Http\Controllers\Api\StripeApiController;
+
 // Services
 use Modules\Icommercestripe\Services\StripeService;
 
@@ -21,16 +24,24 @@ class PublicController extends BasePublicController
     private $order;
     private $transaction;
     private $stripeService;
+    private $stripeApi;
+
+    private $paymentMethod;
 
     public function __construct(
         OrderRepository $order,
         TransactionRepository $transaction,
-        StripeService $stripeService
+        StripeService $stripeService,
+        StripeApiController $stripeApi
     )
     {
         $this->order = $order;
         $this->transaction = $transaction;
         $this->stripeService = $stripeService;
+        $this->stripeApi = $stripeApi;
+
+        // Payment Method Configuration
+        $this->paymentMethod = stripeGetConfiguration();
     }
 
 
@@ -79,6 +90,29 @@ class PublicController extends BasePublicController
         }
        
 
+    }
+
+
+    /**
+    * @param 
+    * @return redirect new link to Onboarding Account
+    */
+    public function connectRefreshUrl(){
+
+        //Get Stripe Configuration to Logged User
+        $payoutStripeConfig = $this->stripeService->findPayoutConfigUser();
+
+        if($payoutStripeConfig->value->accountId){
+            // Create Account Link
+            $accountLink = $this->stripeApi->createLinkAccount($this->paymentMethod->options->secretKey,$payoutStripeConfig->value->accountId);
+
+            return redirect($accountLink);
+
+        }else{
+
+            return redirect(url('/'));
+        }
+       
     }
 
 
