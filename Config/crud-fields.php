@@ -100,6 +100,7 @@ return [
           'props' => [
             'clearable' => true,
             'multiple' => true,
+            'useChips' => true,
             'label' => 'icommercestripe::icommercestripes.table.connectCountries',
           ],
           'loadOptions' => [
