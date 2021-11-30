@@ -69,11 +69,11 @@ class StripeApiController extends BaseApiController
     * @param 
     * @return
     */
-    public function createAccount($paymentMethod,$attr){
+    public function createAccount($secretKey,$attr){
 
         \Log::info('Icommercestripe: create Account');
 
-        $stripe = new \Stripe\StripeClient($paymentMethod->options->secretKey);
+        $stripe = new \Stripe\StripeClient($secretKey);
 
         try {
             
@@ -117,11 +117,11 @@ class StripeApiController extends BaseApiController
     * @param
     * @return
     */
-    public function createLinkAccount($paymentMethod,$accountId){
+    public function createLinkAccount($secretKey,$accountId){
 
         \Log::info('Icommercestripe: create Link Account');
 
-        $stripe = new \Stripe\StripeClient($paymentMethod->options->secretKey);
+        $stripe = new \Stripe\StripeClient($secretKey);
 
         // Create Account
         //$accountId = $this->createAccount($stripe,$attr);
@@ -153,11 +153,11 @@ class StripeApiController extends BaseApiController
     * @param
     * @return
     */
-    public function createLoginLink($paymentMethod,$accountId){
+    public function createLoginLink($secretKey,$accountId){
 
         \Log::info('Icommercestripe: create Login Link');
 
-        $stripe = new \Stripe\StripeClient($paymentMethod->options->secretKey);
+        $stripe = new \Stripe\StripeClient($secretKey);
 
         $result = $stripe->accounts->createLoginLink($accountId,[]);
         

@@ -21,8 +21,8 @@ $router->group(['prefix' => 'icommercestripe/v1'], function (Router $router) {
     $router->group(['prefix' => 'payout/connect'], function (Router $router) {
 
         $router->post('/', [
-        'as' => 'icommercestripe.api.stripe.connect.CreateLink',
-        'uses' => 'IcommerceStripeApiController@connectCreateLink',
+            'as' => 'icommercestripe.api.stripe.connect.createAccountLinkOnboarding',
+            'uses' => 'IcommerceStripeApiController@connectCreateAccountLinkOnboarding',
         ]);
 
         $router->get('/account/get', [

@@ -36,6 +36,8 @@ class IcommerceStripeApiController extends BaseApiController
 
     private $stripeApi;
     private $stripeService;
+
+    private $paymentMethod;
     
     public function __construct(
         IcommerceStripeRepository $icommercestripe,
@@ -55,6 +57,9 @@ class IcommerceStripeApiController extends BaseApiController
 
         $this->stripeApi = $stripeApi;
         $this->stripeService = $stripeService;
+
+        // Payment Method Configuration
+        $this->paymentMethod = stripeGetConfiguration();
         
     }
 
@@ -211,18 +216,15 @@ class IcommerceStripeApiController extends BaseApiController
      * @param Requests request
      * @return url
     */
-    public function connectCreateLink(Request $request){
+    public function connectCreateAccountLinkOnboarding(Request $request){
         
-        \Log::info('Icommercestripe: Connect - Create Link');
+        \Log::info('Icommercestripe: Connect - Create Account Link Onboarding');
 
         $response['status'] = "success";
 
         try {
 
             $data = $request['attributes'] ?? [];//Get data
-
-            // Payment Method Configuration
-            $paymentMethod = stripeGetConfiguration();
 
             // Check if user has a payoutStripeConfig
             $userConfig = $this->stripeService->findPayoutConfigUser();
@@ -231,7 +233,7 @@ class IcommerceStripeApiController extends BaseApiController
             if(is_null($userConfig)){
 
                 // Create Account
-                $account = $this->stripeApi->createAccount($paymentMethod,$data);
+                $account = $this->stripeApi->createAccount($this->paymentMethod->options->secretKey,$data);
 
                 $accountId = $account->id;
 
@@ -248,7 +250,7 @@ class IcommerceStripeApiController extends BaseApiController
             }
 
             // Create Account Link
-            $accountLink = $this->stripeApi->createLinkAccount($paymentMethod,$accountId);
+            $accountLink = $this->stripeApi->createLinkAccount($this->paymentMethod->options->secretKey,$accountId);
 
             //Response
             $response["description"] = "Debes verificar los datos de tu cuenta para poder recibir pagos. Para eso haz click en el siguiente enlace ".$accountLink;
@@ -259,7 +261,7 @@ class IcommerceStripeApiController extends BaseApiController
             ];
 
         } catch (\Exception $e) {
-            \Log::error("Icommercestripe: Connect - Create Link: ".$e->getMessage());
+            \Log::error("Icommercestripe: Connect - Create Account Link Onboarding: ".$e->getMessage());
             $status = 500;
             $response = [
                 'status' => "error",
@@ -286,27 +288,54 @@ class IcommerceStripeApiController extends BaseApiController
 
             $data = $request['attributes'] ?? [];//Get data
 
-            // Payment Method Configuration
-            $paymentMethod = stripeGetConfiguration();
-
-            $responseStripe = $this->stripeApi->retrieveAccount($paymentMethod->options->secretKey,$data['accountId']);
-            
-
-            if(isset($data['withoutFormat'])){
-                $response = $responseStripe; 
+            // Get Account ID - Just for testing API
+            if(isset($data['accountId'])){
+                $accountId = $data['accountId'];
             }else{
-               
-               $response['data'] = [
-                    'email' => $responseStripe->email,
-                    'details_submitted' => $responseStripe->details_submitted,
-                    'chargesEnabled' => $responseStripe->charges_enabled,// Pagos
-                    'payoutsEnabled' => $responseStripe->payouts_enabled // Transferencias
-                ];  
+                 // Check if user has a payoutStripeConfig
+                $userConfig = $this->stripeService->findPayoutConfigUser();
+
+                if(!is_null($userConfig)){
+                    // Get account Id from Field
+                    $accountId = $userConfig->value->accountId;
+
+                }else{
+                    throw new \Exception("User Config - No Exist", 500);
+                }
+            }
+
+            // Response Infor Account
+            $accountInfor = $this->stripeApi->retrieveAccount($this->paymentMethod->options->secretKey,$accountId);
+
+            // Check if exist urlPanel
+            if(isset($userConfig) && isset($userConfig->value->urlPanel)){
+
+                $response['urlPanel'] = $userConfig->value->urlPanel;
+
+            }else{
+
+                // Validate if can create a login link
+                if($accountInfor->details_submitted && $accountInfor->charges_enabled && $accountInfor->payouts_enabled){
+
+                    // Create Login Link
+                    $responseLoginLink = $this->stripeApi->createLoginLink($this->paymentMethod->options->secretKey,$accountId);
+                    
+                    // Save infor in User Profile Field
+                    $fieldCreated = $this->stripeService->syncDataUserField(['urlPanel'=> $responseLoginLink->url]);
+                    
+                    // Add to response
+                    $response['urlPanel'] = $responseLoginLink->url;
+                }        
                 
             }
             
+            // Response
+            $response['email'] = $accountInfor->email;
+            $response['details_submitted'] = $accountInfor->details_submitted;
+            $response['chargesEnabled'] = $accountInfor->charges_enabled;//Pagos
+            $response['payoutsEnabled'] = $accountInfor->payouts_enabled;//Transf
             
-
+                
         } catch (\Exception $e) {
             \Log::error("Icommercestripe: Connect - Get Account ".$e->getMessage());
             $status = 500;
