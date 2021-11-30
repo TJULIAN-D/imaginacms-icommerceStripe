@@ -172,17 +172,16 @@ class StripeService
   /**
   * 
   * @param 
-  * @return Int 
+  * @return $model
   */
   public function findPayoutConfigUser(){
 
     //Data
-    $payoutConfigName = "payoutStripeConfig";
     $userId = \Auth::check()->id ?? 1; // Just Testing
 
     // Check field for this user and name field
     $model = $this->fieldRepository
-    ->where('name','=',$payoutConfigName)
+    ->where('name','=',config('asgard.icommercestripe.config.fieldName'))
     ->where('user_id', '=', $userId)
     ->first();
 
@@ -191,29 +190,34 @@ class StripeService
   }
   /**
   * 
-  * @param 
-  * @return Int 
+  * @param $payoutConfigValues array
+  * @return Model 
   */
-  public function syncDataUserField($payoutConfigValue){
+  public function syncDataUserField($payoutConfigValues){
 
-     //Data
-    $payoutConfigName = "payoutStripeConfig";
-    $userId = \Auth::check()->id ?? 1; // Just Testing
-
-    // Data Field
-    $dataField = [
-      'user_id' => $userId, 
-      'name' => $payoutConfigName,
-      'value' => $payoutConfigValue
-    ];
-
+    // Find Field
     $modelExist = $this->findPayoutConfigUser();
 
-    // Create or Update
-    if($modelExist)
+    // Update Field
+    if($modelExist){
+      
+      $oldValues = json_decode(json_encode($modelExist->value),true); 
+      $dataField['value'] = array_merge($oldValues,$payoutConfigValues);
+
       $result = $this->fieldRepository->update($modelExist,$dataField);
-    else
+
+    }else{
+
+      // Create Field
+      $dataField = [
+        'user_id' => \Auth::check()->id ?? 1, // Just Testing, 
+        'name' => config('asgard.icommercestripe.config.fieldName'),
+        'value' => $payoutConfigValues
+      ];
+
       $result = $this->fieldRepository->create($dataField);
+
+    }
     
 
     return $result;
