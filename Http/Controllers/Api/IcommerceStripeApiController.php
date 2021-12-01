@@ -322,16 +322,20 @@ class IcommerceStripeApiController extends BaseApiController
                     
                     // Save infor in User Profile Field
                     $fieldCreated = $this->stripeService->syncDataUserField(['urlPanel'=> $responseLoginLink->url]);
-                    
+
                     // Add to response
                     $response['urlPanel'] = $responseLoginLink->url;
+
+                }else{
+
+                    $response['urlPanelMsj'] = "Debes completar el proceso de verificacion de datos de la cuenta para poder obtener la URL del panel";
                 }        
                 
             }
             
             // Response
             $response['email'] = $accountInfor->email;
-            $response['details_submitted'] = $accountInfor->details_submitted;
+            $response['detailsSubmitted'] = $accountInfor->details_submitted;
             $response['chargesEnabled'] = $accountInfor->charges_enabled;//Pagos
             $response['payoutsEnabled'] = $accountInfor->payouts_enabled;//Transf
             

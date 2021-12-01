@@ -177,7 +177,7 @@ class StripeService
   public function findPayoutConfigUser(){
 
     //Data
-    $userId = \Auth::check()->id ?? 1; // Just Testing
+    $userId = \Auth::id();
 
     // Check field for this user and name field
     $model = $this->fieldRepository
@@ -197,7 +197,7 @@ class StripeService
 
     // Find Field
     $modelExist = $this->findPayoutConfigUser();
-
+    
     // Update Field
     if($modelExist){
       
@@ -210,7 +210,7 @@ class StripeService
 
       // Create Field
       $dataField = [
-        'user_id' => \Auth::check()->id ?? 1, // Just Testing, 
+        'user_id' => \Auth::id(),
         'name' => config('asgard.icommercestripe.config.fieldName'),
         'value' => $payoutConfigValues
       ];

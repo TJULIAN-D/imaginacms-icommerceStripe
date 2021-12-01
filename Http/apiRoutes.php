@@ -23,26 +23,34 @@ $router->group(['prefix' => 'icommercestripe/v1'], function (Router $router) {
         $router->post('/', [
             'as' => 'icommercestripe.api.stripe.connect.createAccountLinkOnboarding',
             'uses' => 'IcommerceStripeApiController@connectCreateAccountLinkOnboarding',
+            'middleware' => ['auth:api']
         ]);
 
-        $router->get('/account/get', [
+        $router->get('/account/user', [
             'as' => 'icommercestripe.api.stripe.connect.getAccount',
             'uses' => 'IcommerceStripeApiController@connectGetAccount',
+            'middleware' => ['auth:api']
         ]);
 
+        /*
+        * Others Testing Stripes Routes
+        */
         $router->post('/account-response', [
             'as' => 'icommercestripe.api.stripe.connect.accountResponse',
             'uses' => 'IcommerceStripeApiController@connectAccountResponse',
+            'middleware' => ['auth:api']
         ]);
 
         $router->post('/create-login-link', [
             'as' => 'icommercestripe.api.stripe.connect.CreateLoginLink',
             'uses' => 'IcommerceStripeApiController@connectCreateLoginLink',
+            'middleware' => ['auth:api']
         ]);
 
         $router->get('/country/get', [
             'as' => 'icommercestripe.api.stripe.connect.getCountry',
             'uses' => 'IcommerceStripeApiController@connectGetCountry',
+            'middleware' => ['auth:api']
         ]);
 
     });
