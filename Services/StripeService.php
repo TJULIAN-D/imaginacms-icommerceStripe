@@ -13,11 +13,11 @@ class StripeService
 
   
   /**
-  * Make Configuration
+  * Make Configuration to Payment
   * @param 
   * @return Array 
   */
-  public function makeConfigurationToGenerateLink($paymentMethod,$order,$transaction){
+  public function createConfigToTransferGroup($paymentMethod,$order,$transaction){
         
    
     // Meta Data
@@ -28,9 +28,9 @@ class StripeService
 
     // All Params
     $params = array(
-      'customer_email' => 'wavutes@gmail.com', //$order->email,
+      'customer_email' => $order->email,
       'payment_method_types' => ['card'],
-      'line_items' => $this->getLineItems($order),
+      'line_items' => $this->getLineItems($order,$paymentMethod->options->currency),
       'payment_intent_data' => [
         'transfer_group' => stripeGetTransferGroup($order->id,$transaction->id),
         'description' => stripeGetOrderDescription($order),
@@ -47,15 +47,18 @@ class StripeService
   }
 
   /**
-  * Make Configuration
+  * Make Configuration Implementation Destination Charge
   * @param 
   * @return Array 
   */
-	public function makeConfigurationToGenerateLinkDestinationCharge($paymentMethod,$order,$transaction){
+	public function createConfigToDestinationCharge($paymentMethod,$order,$transaction){
         
     //All API requests expect amounts to be provided in a currency’s smallest unit
-    $amount = $order->total * 100;
-   
+    //$amount = $order->total * 100;
+    
+    // Get Organization Id to First Item - All products have the same organization id
+    $organizationId = $order->orderItems->first()->product->organization_id;
+
     //Comision
     $feeAmount = $paymentMethod->options->comisionAmount; 
     $applicationFeeAmount = $feeAmount * 100;
@@ -68,18 +71,13 @@ class StripeService
 
     // All Params
 		$params = array(
-      'customer_email' => "wavutes@gmail.com",
+      'customer_email' => $order->email,
 			'payment_method_types' => ['card'],
-			'line_items' => [[
-        'name' => stripeGetOrderDescription($order),
-        'amount' => $amount,
-        'currency' => $order->currency_code,
-        'quantity' => 1,
-      ]],
+      'line_items' => $this->getLineItems($order),
       'payment_intent_data' => [
         'application_fee_amount' => $applicationFeeAmount,
-          'transfer_data' => [
-            'destination' => 'acct_1JxG0B2aOfu6i4RG', //Account Connected
+        'transfer_data' => [
+            'destination' => $this->getAccountIdByOrganizationId($organizationId),
         ],
         'description' => stripeGetOrderDescription($order),
         'metadata' => $metaData
@@ -142,23 +140,27 @@ class StripeService
   * @param 
   * @return Int 
   */
-  public function getLineItems($order){
+  public function getLineItems($order,$currencyAccount){
+
+    
+    $currencyConvertionValue = stripeGetCurrencyValue($currencyAccount);
 
     $items = [];
     foreach ($order->orderItems as $key => $item) {
 
-      // AMOUUUNTT TESTTTTTTT ===================================
+      // Get the amount in the currency of the Main Account
+      $totalItem = stripeGetItemConvertion($order->currency_code,$currencyAccount,$item,$currencyConvertionValue);
+
       //All API requests expect amounts to be provided in a currency’s smallest unit
-      // $amount = $item->price * 100;
-      $amount = 50 * 100; // 50$
+      $amountInCents = $totalItem * 100;
 
       $itemInfor['price_data'] = [
-        'currency' => 'USD',//$order->currency_code,
+        'currency' => $currencyAccount,
         'product_data' => [
           'name' => $item->product->name,
           'metadata' => ['id'=>$item->product->id]
         ],
-        'unit_amount' => $amount
+        'unit_amount' => $amountInCents
       ];
       $itemInfor['quantity'] = $item->quantity;
       array_push($items, $itemInfor);
@@ -170,14 +172,14 @@ class StripeService
 
 
   /**
-  * 
-  * @param 
+  * Find Configuration Payout User Profile Field
+  * @param $userId - Optional
   * @return $model
   */
-  public function findPayoutConfigUser(){
+  public function findPayoutConfigUser($userId=null){
 
-    //Data
-    $userId = \Auth::id();
+    if(is_null($userId))
+      $userId = \Auth::id();
 
     // Check field for this user and name field
     $model = $this->fieldRepository
@@ -189,8 +191,8 @@ class StripeService
 
   }
   /**
-  * 
-  * @param $payoutConfigValues array
+  * Values to save or update in Configuration Payout User Profile Field
+  * @param $payoutConfigValues - array
   * @return Model 
   */
   public function syncDataUserField($payoutConfigValues){
@@ -221,6 +223,21 @@ class StripeService
     
 
     return $result;
+
+  }
+
+  /**
+  * Get Account Id
+  * @param $organizationId
+  * @return $accountId
+  */
+  public function getAccountIdByOrganizationId($organizationId){
+
+    $organization = app("Modules\Isite\Repositories\OrganizationRepository")->where('id',$organizationId)->first();
+
+    $userConfig = $this->findPayoutConfigUser($organization->user_id);
+
+    return $userConfig->value->accountId;
 
   }
 
