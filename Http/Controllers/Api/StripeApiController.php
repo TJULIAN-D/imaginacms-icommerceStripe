@@ -38,7 +38,10 @@ class StripeApiController extends BaseApiController
             \Stripe\Stripe::setApiKey($paymentMethod->options->secretKey);
 
             // Make Configuration
-            $conf = $this->stripeService->makeConfigurationToGenerateLink($paymentMethod,$order,$transaction);
+            $conf = $this->stripeService->createConfigToTransferGroup($paymentMethod,$order,$transaction);
+           
+
+            //$conf = $this->stripeService->createConfigToDestinationCharge($paymentMethod,$order,$transaction);
 
             // Create a Session
             $response = \Stripe\Checkout\Session::create($conf);

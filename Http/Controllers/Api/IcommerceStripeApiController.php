@@ -91,7 +91,7 @@ class IcommerceStripeApiController extends BaseApiController
     
 
     /**
-     * ROUTE - Init data
+     * Init data to checkout
      * @param Requests request
      * @param Requests orderId
      * @return route
@@ -173,14 +173,11 @@ class IcommerceStripeApiController extends BaseApiController
         // Default Response
         $response = ['status'=> 'error'];
 
-        // Payment Method Configuration
-        $paymentMethod = stripeGetConfiguration();
-
         // Validation event
         $event = null;
         try {
             $event = \Stripe\Webhook::constructEvent(
-                $request->getContent(), $request->header('stripe-signature'), $paymentMethod->options->signSecret
+                $request->getContent(), $request->header('stripe-signature'), $this->paymentMethod->options->signSecret
             );
             $response = ['status'=> 'success'];
         } catch(\UnexpectedValueException $e) {
@@ -199,7 +196,7 @@ class IcommerceStripeApiController extends BaseApiController
                 $this->orderProcess($event);
             }
             if($event->data->object->object=="charge"){
-                $this->chargesProcess($event,$paymentMethod);
+                $this->chargesProcess($event);
             }
 
         }
@@ -212,7 +209,7 @@ class IcommerceStripeApiController extends BaseApiController
     }
 
     /**
-     * 
+     * Create Account with Link to Onboarding proccess
      * @param Requests request
      * @return url
     */
@@ -237,13 +234,13 @@ class IcommerceStripeApiController extends BaseApiController
 
                 $accountId = $account->id;
 
-                $response["title"] = "Tu cuenta Connect ha sido creada";
+                $response["title"] = trans("icommercestripe::icommercestripes.messages.accountCreated");
 
                 // Save infor in User Profile Field
                 $fieldCreated = $this->stripeService->syncDataUserField(['accountId'=> $accountId]);
             }else{
 
-                $response["title"] = "Ya posees una cuenta Connect";
+                $response["title"] = trans("icommercestripe::icommercestripes.messages.accountAlreadyHave");
 
                 // Get account Id from Field
                 $accountId = $userConfig->value->accountId;
@@ -253,7 +250,7 @@ class IcommerceStripeApiController extends BaseApiController
             $accountLink = $this->stripeApi->createLinkAccount($this->paymentMethod->options->secretKey,$accountId);
 
             //Response
-            $response["description"] = "Debes verificar los datos de tu cuenta para poder recibir pagos. Para eso haz click en el siguiente enlace ".$accountLink;
+            $response["description"] = trans("icommercestripe::icommercestripes.messages.verifyAccount").$accountLink;
 
             //Data
             $response['data'] = [
@@ -276,7 +273,7 @@ class IcommerceStripeApiController extends BaseApiController
 
     
     /**
-     * 
+     * Get Account Data and Create urlPanel (Login Link) if it is not saved in profile field
      * @param Requests request
      * @return url
     */
@@ -292,7 +289,7 @@ class IcommerceStripeApiController extends BaseApiController
             if(isset($data['accountId'])){
                 $accountId = $data['accountId'];
             }else{
-                 // Check if user has a payoutStripeConfig
+                 // Check if user has a payoutStripeConfig from logged user
                 $userConfig = $this->stripeService->findPayoutConfigUser();
 
                 if(!is_null($userConfig)){
@@ -300,7 +297,7 @@ class IcommerceStripeApiController extends BaseApiController
                     $accountId = $userConfig->value->accountId;
 
                 }else{
-                    throw new \Exception("User Config - No Exist", 500);
+                    throw new \Exception("User Payout Config - No Exist", 500);
                 }
             }
 
@@ -315,7 +312,7 @@ class IcommerceStripeApiController extends BaseApiController
             }else{
 
                 // Validate if can create a login link
-                if($accountInfor->details_submitted && $accountInfor->charges_enabled && $accountInfor->payouts_enabled){
+                if(stripeValidateAccountRequirements($accountInfor)){
 
                     // Create Login Link
                     $responseLoginLink = $this->stripeApi->createLoginLink($this->paymentMethod->options->secretKey,$accountId);
@@ -328,7 +325,7 @@ class IcommerceStripeApiController extends BaseApiController
 
                 }else{
 
-                    $response['urlPanelMsj'] = "Debes completar el proceso de verificacion de datos de la cuenta para poder obtener la URL del panel";
+                    $response['urlPanelMsj'] = trans("icommercestripe::icommercestripes.validation.accountIncompletePanelUrl");
                 }        
                 
             }
@@ -353,8 +350,8 @@ class IcommerceStripeApiController extends BaseApiController
     }
 
     /**
-     * 
-     * @param Requests request
+     * Create login link
+     * @param Request accountId
      * @return url
     */
     public function connectCreateLoginLink(Request $request){
@@ -386,9 +383,9 @@ class IcommerceStripeApiController extends BaseApiController
 
 
     /**
-    * Response
+    * Just Testing response
     * @param Requests request
-    * @return route
+    * @return
     */
     public function connectAccountResponse(Request $request){
 
@@ -426,7 +423,7 @@ class IcommerceStripeApiController extends BaseApiController
     /**
      * 
      * @param Requests request
-     * @return url
+     * @return Countries Stripe
     */
     public function connectGetCountry(Request $request){
         
@@ -465,14 +462,14 @@ class IcommerceStripeApiController extends BaseApiController
     }
 
     /**
-     * 
-     * @param Requests request
-     * @return url
+     * Update Order and Transaction
+     * @param $event - (stripe information webhook)
+     * @return
     */
     public function orderProcess($event){
 
         \Log::info('Icommercestripe: Response - Order Process - INIT - '.time());
-        /*
+        
         // Get all infor about status    
         $details = $this->stripeService->getStatusDetail($event); 
 
@@ -498,17 +495,16 @@ class IcommerceStripeApiController extends BaseApiController
             );
                 
         }
-        */
         \Log::info('Icommercestripe: Response - Order Process - END - '.time());
 
     }
 
     /**
-    * Response
-    * @param Requests request
-    * @return route
+    * Create transfer to each product
+    * @param $event - (stripe information webhook)
+    * @return
     */
-    public function chargesProcess($event,$paymentMethod){
+    public function chargesProcess($event){
 
         // Get Charge Infor
         $charge = $event->data->object;
@@ -517,48 +513,77 @@ class IcommerceStripeApiController extends BaseApiController
 
         //Get order id from transfer group
         $infor = stripeGetInforTransferGroup($charge->transfer_group);
+        
         $order = $this->order->find($infor[1]);
 
-        
+        //$order = $this->order->find(4);// Testinnnnggggggggg
+
         /*
         * Create Transfer to each product
         */
-        \Stripe\Stripe::setApiKey($paymentMethod->options->secretKey);
+        \Stripe\Stripe::setApiKey($this->paymentMethod->options->secretKey);
 
         $description = stripeGetOrderDescription($order);
 
+        /*
+        * Testing Group Collection
+        */
+        /*
+        \Log::info('Icommercestripe: Response - Charge Process - Items Count: '.$order->orderItems->count());
+        $grouped = $order->orderItems->groupBy('title');
+        //\Log::info('Icommercestripe: Response - Charge Process - Grouped: '.$grouped);
+        foreach ($grouped as $key => $items) {
+            \Log::info('Icommercestripe: Response - Charge Process - Group Key: '.$key);
+            foreach ($items as $key2 => $item) {
+               \Log::info('Icommercestripe: Response - Charge Process - Item Price: '.$item->price);
+            }
+            
+        }
+        */
+
+        // Currency code from Config
+        $currencyAccount = $this->paymentMethod->options->currency;
+
+        // Currency Value from Icommerce
+        $currencyConvertionValue = stripeGetCurrencyValue($currencyAccount);
+
         foreach ($order->orderItems as $key => $item) {
 
-            // DESTINATION TESTTTTTTT ===================================
-            if($key==0)
-                $destination = "acct_1K0AwA2YGSG5OMQL"; //USA
-            if($key==1)
-                $destination = "acct_1K0AzB2Y6JblUJSo"; //colombia
             
-            // AMOUUUNTT TESTTTTTTT ===================================
-            //$amount = $item->price * 100;
-            $amount = 1000;//10$
+            if(!empty($item->product->organization_id)){
 
-            //FALTARIA EL VALOR DE LA COMISION
-            //Se puede agregar como infor en la meta data
+                // Get account Id to destination transfer
+                $destination = $this->stripeService->getAccountIdByOrganizationId($item->product->organization_id);
+                
+                // Get the amount in the currency of the Main Account
+                $totalItem = stripeGetItemConvertion($order->currency_code,$currencyAccount,$item,$currencyConvertionValue);
 
-            try{
+                // Get Comision
+                $comision = 1; // Example 1$
+                $amountFinal = $totalItem - $comision;
+                
+                //All API requests expect amounts to be provided in a currency’s smallest unit
+                $amountInCents = $amountFinal * 100;
 
-                $transfer = \Stripe\Transfer::create([
-                      'amount' => $amount,
-                      'currency' => 'usd', //$order->currency_code
-                      'source_transaction' => $charge->id,
-                      'destination' => $destination,//USA
-                      'transfer_group' => $charge->transfer_group,
-                      'description' => $description.' - Transfer'
-                ]);
+                try{
+                   
+                    $transfer = \Stripe\Transfer::create([
+                          'amount' => $amountInCents,
+                          'currency' => $currencyAccount,
+                          'source_transaction' => $charge->id,
+                          'destination' => $destination,
+                          'transfer_group' => $charge->transfer_group,
+                          'description' => $description.' - Transfer'
+                    ]);
+                    
+                    \Log::info('Icommercestripe: Response - Created Transfer to: '.$destination); 
 
-                \Log::info('Icommercestripe: Response - Created Transfer to: '.$destination); 
+                } catch (Exception $e) {
+                    \Log::error('Icommercestripe: Response - Transfer - Message: '.$e->getMessage());
+                }
 
-            } catch (Exception $e) {
-                \Log::error('Icommercestripe: Response - Transfer - Message: '.$e->getMessage());
             }
-
+            
         }
 
     }
