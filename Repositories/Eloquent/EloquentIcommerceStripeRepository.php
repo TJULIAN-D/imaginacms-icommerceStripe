@@ -61,6 +61,32 @@ class EloquentIcommerceStripeRepository extends EloquentBaseRepository implement
                 return $response;
               }
         }
+
+        // Validating Accound Id Destination Requirements to Chargers and Transfers
+        if(isset($cart)){
+
+          $stripeApiController = app('Modules\Icommercestripe\Http\Controllers\Api\StripeApiController');
+          $paymentMethod = stripeGetConfiguration();
+
+          foreach ($cart->products as $key => $item) {
+            if(!empty($item->product->organization_id)){
+
+              $destination = app('Modules\Icommercestripe\Services\StripeService')->getAccountIdByOrganizationId($item->product->organization_id);
+              
+              $account = $stripeApiController->retrieveAccount($paymentMethod->options->secretKey,$destination);
+
+              if(!stripeValidateAccountRequirements($account)){
+
+                $response["status"] = "error";
+                $response["msj"] = trans("icommercestripe::icommercestripes.validation.accountIncomplete");
+
+                return $response;
+              }
+
+            }
+          }
+
+        }
        
 
         return $response;
