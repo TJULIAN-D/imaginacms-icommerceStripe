@@ -82,3 +82,41 @@ if (!function_exists('stripeValidateAccountRequirements')) {
     }
 
 }
+
+/**
+*    
+* @param 
+* @return
+*/
+if(!function_exists('stripeGetItemConvertion')){
+    function stripeGetItemConvertion($orderCurrencyCode,$accountCurrencyCode,$item,$currencyValue){
+        
+        // Need Convertion
+        if($orderCurrencyCode!=$accountCurrencyCode){
+            $totalItem = round($item->price / $currencyValue,2);
+        }else{
+            $totalItem = $item->price;
+        }
+
+        return $totalItem;
+    }
+}
+
+/**
+* Find Currency value to convertion in Icommerce with Currency Account
+* @param 
+* @return
+*/
+if(!function_exists('stripeGetCurrencyValue')){
+    function stripeGetCurrencyValue($currencyAccount){
+         
+        $attributes = array('code'=> $currencyAccount);
+        $currency = app('Modules\Icommerce\Repositories\CurrencyRepository')->findByAttributes($attributes);
+
+        if($currency)
+            return $currency->value;
+        else
+            throw new \Exception('Currency not found in Icommerce Module '.$currencyAccount, 500);
+        
+    }
+}
