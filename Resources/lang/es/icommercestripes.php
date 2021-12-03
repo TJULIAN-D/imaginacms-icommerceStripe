@@ -32,7 +32,12 @@ return [
         
     ],
     'messages' => [
+        'accountCreated' => 'Tu cuenta Connect ha sido creada',
+        'accountAlreadyHave' => 'Ya tienes una cuenta Connect',
+        'verifyAccount' => 'Debes verificar los datos de tu cuenta para poder recibir pagos. Para eso haz click en el siguiente enlace: ',
     ],
     'validation' => [
+        'accountIncompletePanelUrl' => 'Debes completar el proceso de verificacion de datos de la cuenta para obtener la URL del panel',
+        'accountIncomplete' => 'La cuenta destino no cumple con los requisitos para recibir pagos'
     ]
 ];

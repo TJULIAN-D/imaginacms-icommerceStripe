@@ -32,7 +32,12 @@ return [
         
     ],
     'messages' => [
+        'accountCreated' => 'Your Connect account has been created',
+        'accountAlreadyHave' => 'You already have a Connect account',
+        'verifyAccount' => 'You must verify your account details in order to receive payments. For that click on the following link: ',
     ],
     'validation' => [
+        'accountIncompletePanelUrl' => 'You must complete the account data verification process to get the panel URL',
+        'accountIncomplete' => 'The destination account does not have the requirements to receive payments'
     ]
 ];
