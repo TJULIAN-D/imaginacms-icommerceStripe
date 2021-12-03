@@ -38,6 +38,7 @@ class IcommercestripeDatabaseSeeder extends Seeder
             $options['mode'] = "sandbox";
             $options['connectCountries'] = null;
             $options['comisionAmount'] = 0;
+            $options['currency'] = "USD";
             $options['minimunAmount'] = 4000;
             $options['maximumAmount'] = null;
       

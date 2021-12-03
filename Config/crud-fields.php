@@ -91,6 +91,21 @@ return [
                 'label' => 'icommercestripe::icommercestripes.table.signSecret'
           ]
         ],
+        'currency' => [
+            'value' => 'USD',
+            'name' => 'currency',
+            'isFakeField' => true,
+            'type' => 'select',
+            'props' => [
+              'label' => 'icommercestripe::icommercestripes.table.currency',
+              'useInput' => false,
+              'useChips' => false,
+              'multiple' => false,
+              'hideDropdownIcon' => true,
+              'newValueMode' => 'add-unique',
+              'options' => config('asgard.icommercestripes.config.currencies')
+            ]
+        ],
         'connectCountries' => [
           'name' => 'connectCountries',
           'value' => [],

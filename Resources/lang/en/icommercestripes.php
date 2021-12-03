@@ -25,6 +25,7 @@ return [
         'comisionAmount' => 'Comision Amount',
         'minimunAmount' => 'Minimum Amount ($0.50)',
         'connectCountries' => 'Countries enabled for connect accounts',
+        'currency' => 'Currency',
     ],
     'form' => [
     ],
