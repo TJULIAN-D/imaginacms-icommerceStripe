@@ -64,3 +64,21 @@ if (!function_exists('stripeGetInforTransferGroup')) {
 
     }
 }
+
+/**
+*    
+* @param 
+* @return
+*/
+if (!function_exists('stripeValidateAccountRequirements')) {
+    
+    function stripeValidateAccountRequirements($stripeAccount){
+        $validate = false;
+
+        if($stripeAccount->details_submitted && $stripeAccount->charges_enabled && $stripeAccount->payouts_enabled)
+            $validate = true;
+
+        return $validate;
+    }
+
+}
