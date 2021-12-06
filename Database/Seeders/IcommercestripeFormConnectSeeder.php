@@ -87,8 +87,8 @@ class IcommercestripeFormConnectSeeder extends Seeder
                   'useChips' => true
                 ],
                 'loadOptions' => [
-                  'apiRoute' => 'ilocations/v2/countries',
-                  'select' => ['label' => 'title', 'id' => 'iso2'],
+                  'apiRoute' => 'v2/ilocations/countries',
+                  'select' => ['label' => 'name', 'id' => 'iso2'],
                   'requestParams' => [
                     "filter" => [
                       "indexAll" => true,
