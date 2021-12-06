@@ -553,14 +553,18 @@ class IcommerceStripeApiController extends BaseApiController
             if(!empty($item->product->organization_id)){
 
                 // Get account Id to destination transfer
-                $destination = $this->stripeService->getAccountIdByOrganizationId($item->product->organization_id);
+                $extraParams = $this->stripeService->getAccountIdByOrganizationId($item->product->organization_id,true);
+
+                $destination = $extraParams['accountId'];
                 
                 // Get the amount in the currency of the Main Account
                 $totalItem = stripeGetItemConvertion($order->currency_code,$currencyAccount,$item,$currencyConvertionValue);
+                \Log::info('Icommercestripe: Response - Total Item: '.$totalItem); 
 
                 // Get Comision
-                $comision = 1; // Example 1$
+                $comision = $this->stripeService->getComisionToDestination($extraParams['user'],$totalItem);
                 $amountFinal = $totalItem - $comision;
+                \Log::info('Icommercestripe: Response - Amount Final: '.$amountFinal); 
                 
                 //All API requests expect amounts to be provided in a currency’s smallest unit
                 $amountInCents = $amountFinal * 100;
@@ -573,9 +577,10 @@ class IcommerceStripeApiController extends BaseApiController
                           'source_transaction' => $charge->id,
                           'destination' => $destination,
                           'transfer_group' => $charge->transfer_group,
-                          'description' => $description.' - Transfer'
+                          'description' => $description.' - Transfer',
+                          'metadata' => ['comision'=>$comision]
                     ]);
-                    
+                   
                     \Log::info('Icommercestripe: Response - Created Transfer to: '.$destination); 
 
                 } catch (Exception $e) {

@@ -164,6 +164,16 @@ class StripeService
       ];
       $itemInfor['quantity'] = $item->quantity;
       array_push($items, $itemInfor);
+
+
+      /*Testing to Icredit*/
+      /*
+      $extraParams = $this->getAccountIdByOrganizationId($item->product->organization_id,true);
+      // Get Comision
+      $comision = $this->stripeService->getComisionToDestination($extraParams['user'],$totalItem);
+      $amountFinal = $totalItem - $comision;
+      */
+
     }
 
     return $items;
@@ -231,14 +241,66 @@ class StripeService
   * @param $organizationId
   * @return $accountId
   */
-  public function getAccountIdByOrganizationId($organizationId){
+  public function getAccountIdByOrganizationId($organizationId,$extraData = false){
 
     $organization = app("Modules\Isite\Repositories\OrganizationRepository")->where('id',$organizationId)->first();
 
     $userConfig = $this->findPayoutConfigUser($organization->user_id);
 
-    return $userConfig->value->accountId;
+    if($extraData){
 
+      $data['accountId'] = $userConfig->value->accountId;
+      $data['user'] = $userConfig->user;
+
+      return $data;
+
+    }else{
+
+      return $userConfig->value->accountId;
+
+    }
+    
+
+  }
+
+  /**
+  * Get Comision
+  * @param $user (destination)
+  * @return $comision
+  */
+  public function getComisionToDestination($user,$total){
+    
+    $comision = 0;
+
+    //$subscription = app("Modules\Iplan\Services\SubscriptionService")->validate($user,$user);
+
+    //Just for testing
+    $subscription = app("Modules\Iplan\Repositories\SubscriptionRepository")
+    ->where('entity_id','=',$user->id)
+    ->where('entity','=',get_class($user))->first();
+
+    //\Log::info('Icommercestripe: Response - Subscription: '.json_encode($subscription)); 
+
+    if($subscription){
+
+      $typeDiscount = $subscription->plan->options->transactionFeeType;
+      $value = $subscription->plan->options->transactionFeeAmount;
+
+      //\Log::info('Icommercestripe: Response - TypeDiscount: '.$typeDiscount); 
+
+      if ($typeDiscount=="fixed"){
+        $comision = $value;
+      }
+
+      if ($typeDiscount=="percentage"){
+        $comision = $total * $value / 100;
+      }
+
+    }
+
+    \Log::info('Icommercestripe: Response - Comision: '.$comision); 
+
+    return $comision;
   }
 
     
