@@ -141,7 +141,7 @@ class StripeApiController extends BaseApiController
           [
             'account' => $accountId,
             'refresh_url' => route('icommercestripe.connect.refresh.url'),
-            'return_url' => url('/'),//"https://connect.stripe.com/hosted/oauth?success=true",
+            'return_url' => url('/iadmin/#/me/profile'),//"https://connect.stripe.com/hosted/oauth?success=true",
             'type' => 'account_onboarding'
           ]
         ); 
