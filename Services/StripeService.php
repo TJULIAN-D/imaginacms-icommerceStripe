@@ -298,9 +298,11 @@ class StripeService
 
     }
 
-    \Log::info('Icommercestripe: Response - Comision: '.$comision); 
+    $comisionFinal = round($comision, 2);
 
-    return $comision;
+    \Log::info('Icommercestripe: Response - Comision: '.$comisionFinal); 
+
+    return $comisionFinal;
   }
 
     
