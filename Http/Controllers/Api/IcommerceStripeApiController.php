@@ -297,7 +297,7 @@ class IcommerceStripeApiController extends BaseApiController
                     $accountId = $userConfig->value->accountId;
 
                 }else{
-                    throw new \Exception("User Payout Config - No Exist", 500);
+                    throw new \Exception("User Payout Config - No Exist", 204);
                 }
             }
 
@@ -307,7 +307,7 @@ class IcommerceStripeApiController extends BaseApiController
             // Check if exist urlPanel
             if(isset($userConfig) && isset($userConfig->value->urlPanel)){
 
-                $response['urlPanel'] = $userConfig->value->urlPanel;
+                $responseTent['urlPanel'] = $userConfig->value->urlPanel;
 
             }else{
 
@@ -321,25 +321,27 @@ class IcommerceStripeApiController extends BaseApiController
                     $fieldCreated = $this->stripeService->syncDataUserField(['urlPanel'=> $responseLoginLink->url]);
 
                     // Add to response
-                    $response['urlPanel'] = $responseLoginLink->url;
+                    $responseTent['urlPanel'] = $responseLoginLink->url;
 
                 }else{
 
-                    $response['urlPanelMsj'] = trans("icommercestripe::icommercestripes.validation.accountIncompletePanelUrl");
+                    $responseTent['urlPanelMsj'] = trans("icommercestripe::icommercestripes.validation.accountIncompletePanelUrl");
                 }        
                 
             }
             
             // Response
-            $response['email'] = $accountInfor->email;
-            $response['detailsSubmitted'] = $accountInfor->details_submitted;
-            $response['chargesEnabled'] = $accountInfor->charges_enabled;//Pagos
-            $response['payoutsEnabled'] = $accountInfor->payouts_enabled;//Transf
+            $responseTent['email'] = $accountInfor->email;
+            $responseTent['detailsSubmitted'] = $accountInfor->details_submitted;
+            $responseTent['chargesEnabled'] = $accountInfor->charges_enabled;//Pagos
+            $responseTent['payoutsEnabled'] = $accountInfor->payouts_enabled;//Transf
+
+            $response['data'] = $responseTent;
             
                 
         } catch (\Exception $e) {
             \Log::error("Icommercestripe: Connect - Get Account ".$e->getMessage());
-            $status = 500;
+            $status = $e->getCode();
             $response = [
                 'errors' => $e->getMessage()
             ];
@@ -583,10 +585,23 @@ class IcommerceStripeApiController extends BaseApiController
                    
                     \Log::info('Icommercestripe: Response - Created Transfer to: '.$destination); 
 
+                    // Save Credit
+                    /*
+                    $dataToCredit = [
+                        'amount' => $amountFinal,
+                        'userId' => $extraParams['user']->id,
+                        'description' => 'Transferencia id: '.$transfer->id.' para el accountId Stripe: '.$destination,
+                        'status' => 2
+                    ];
+                    $credit = app("Modules\Icredit\Services\CreditService")->create($dataToCredit);
+                    */
+
                 } catch (Exception $e) {
                     \Log::error('Icommercestripe: Response - Transfer - Message: '.$e->getMessage());
                 }
 
+            }else{
+                \Log::info('Icommercestripe: Response - NO EXIST ITEM PRODUCT ORGANIZATION ID');  
             }
             
         }
