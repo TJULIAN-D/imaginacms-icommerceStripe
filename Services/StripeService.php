@@ -149,7 +149,7 @@ class StripeService
     foreach ($order->orderItems as $key => $item) {
 
       // Get the amount in the currency of the Main Account
-      $totalItem = stripeGetItemConvertion($order->currency_code,$currencyAccount,$item,$currencyConvertionValue);
+      $totalItem = stripeGetAmountConvertion($order->currency_code,$currencyAccount,$item->price,$currencyConvertionValue);
 
       //All API requests expect amounts to be provided in a currency’s smallest unit
       $amountInCents = $totalItem * 100;
@@ -164,15 +164,6 @@ class StripeService
       ];
       $itemInfor['quantity'] = $item->quantity;
       array_push($items, $itemInfor);
-
-
-      /*Testing to Icredit*/
-      /*
-      $extraParams = $this->getAccountIdByOrganizationId($item->product->organization_id,true);
-      // Get Comision
-      $comision = $this->stripeService->getComisionToDestination($extraParams['user'],$totalItem);
-      $amountFinal = $totalItem - $comision;
-      */
 
     }
 
@@ -272,21 +263,19 @@ class StripeService
     
     $comision = 0;
 
-    //$subscription = app("Modules\Iplan\Services\SubscriptionService")->validate($user,$user);
-
     //Just for testing
     $subscription = app("Modules\Iplan\Repositories\SubscriptionRepository")
     ->where('entity_id','=',$user->id)
     ->where('entity','=',get_class($user))->first();
 
-    //\Log::info('Icommercestripe: Response - Subscription: '.json_encode($subscription)); 
+    //\Log::info('Icommercestripe: Response - Comision - Subscription: '.json_encode($subscription)); 
 
     if($subscription){
 
       $typeDiscount = $subscription->plan->options->transactionFeeType;
       $value = $subscription->plan->options->transactionFeeAmount;
 
-      //\Log::info('Icommercestripe: Response - TypeDiscount: '.$typeDiscount); 
+      //\Log::info('Icommercestripe: Response - Comision - TypeDiscount: '.$typeDiscount); 
 
       if ($typeDiscount=="fixed"){
         $comision = $value;

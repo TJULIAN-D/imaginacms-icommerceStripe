@@ -510,101 +510,75 @@ class IcommerceStripeApiController extends BaseApiController
 
         // Get Charge Infor
         $charge = $event->data->object;
-        \Log::info('Icommercestripe: Response - Charge Process - Id: '.$charge->id);
-        \Log::info('Icommercestripe: Response - Charge Process - Transfer Group: '.$charge->transfer_group);
-
+        \Log::info('Icommercestripe: Charge Process - Id: '.$charge->id);
+        
         //Get order id from transfer group
         $infor = stripeGetInforTransferGroup($charge->transfer_group);
-        
         $order = $this->order->find($infor[1]);
+        //$order = $this->order->find(33);// Testinnnnggggggggg
 
-        //$order = $this->order->find(4);// Testinnnnggggggggg
-
-        /*
-        * Create Transfer to each product
-        */
+        //Set Stripe Transfer
         \Stripe\Stripe::setApiKey($this->paymentMethod->options->secretKey);
 
+        // Get Base description to each Transfer
         $description = stripeGetOrderDescription($order);
 
-        /*
-        * Testing Group Collection
-        */
-        /*
-        \Log::info('Icommercestripe: Response - Charge Process - Items Count: '.$order->orderItems->count());
-        $grouped = $order->orderItems->groupBy('title');
-        //\Log::info('Icommercestripe: Response - Charge Process - Grouped: '.$grouped);
-        foreach ($grouped as $key => $items) {
-            \Log::info('Icommercestripe: Response - Charge Process - Group Key: '.$key);
-            foreach ($items as $key2 => $item) {
-               \Log::info('Icommercestripe: Response - Charge Process - Item Price: '.$item->price);
-            }
-            
-        }
-        */
-
-        // Currency code from Config
+        // Currency Code from Config PaymentMethod
         $currencyAccount = $this->paymentMethod->options->currency;
 
         // Currency Value from Icommerce
         $currencyConvertionValue = stripeGetCurrencyValue($currencyAccount);
 
-        foreach ($order->orderItems as $key => $item) {
+        // Each Transfer to Order Child
+        foreach ($order->children as $key => $orderChild) {
+           if(!empty($orderChild->organization_id)){
+                \Log::info('Icommercestripe: Charge Process - OrderChild ID: '.$orderChild->id); 
 
-            
-            if(!empty($item->product->organization_id)){
-
-                // Get account Id to destination transfer
-                $extraParams = $this->stripeService->getAccountIdByOrganizationId($item->product->organization_id,true);
-
-                $destination = $extraParams['accountId'];
+                //Get account Id to destination transfer
+                $accountInfor = $this->stripeService->getAccountIdByOrganizationId($orderChild->organization_id,true);
                 
                 // Get the amount in the currency of the Main Account
-                $totalItem = stripeGetItemConvertion($order->currency_code,$currencyAccount,$item,$currencyConvertionValue);
-                \Log::info('Icommercestripe: Response - Total Item: '.$totalItem); 
-
+                $totalOrder = stripeGetAmountConvertion($orderChild->currency_code,$currencyAccount,$orderChild->total,$currencyConvertionValue);
+               
                 // Get Comision
-                $comision = $this->stripeService->getComisionToDestination($extraParams['user'],$totalItem);
-                $amountFinal = $totalItem - $comision;
-                \Log::info('Icommercestripe: Response - Amount Final: '.$amountFinal); 
-                
+                $comision = $this->stripeService->getComisionToDestination($accountInfor['user'],$totalOrder);
+
+                //Amount to Transfer
+                $amountTransfer = $totalOrder - $comision;
+               
                 //All API requests expect amounts to be provided in a currency’s smallest unit
-                $amountInCents = $amountFinal * 100;
+                $amountInCents = $amountTransfer * 100;
 
-                try{
-                   
+                 try{
+                    
                     $transfer = \Stripe\Transfer::create([
-                          'amount' => $amountInCents,
-                          'currency' => $currencyAccount,
-                          'source_transaction' => $charge->id,
-                          'destination' => $destination,
-                          'transfer_group' => $charge->transfer_group,
-                          'description' => $description.' - Transfer',
-                          'metadata' => ['comision'=>$comision]
+                        'amount' => $amountInCents,
+                        'currency' => $currencyAccount,
+                        'source_transaction' => $charge->id,
+                        'destination' => $accountInfor['accountId'],
+                        'transfer_group' => $charge->transfer_group,
+                        'description' => $description.'- Transfer - Oc #'.$orderChild->id,
+                        'metadata' => [
+                            'TO' => $totalOrder,
+                            'CM'=> $comision,
+                            'TT' => $amountTransfer
+                        ]
                     ]);
-                   
-                    \Log::info('Icommercestripe: Response - Created Transfer to: '.$destination); 
-
-                    // Save Credit
-                    /*
-                    $dataToCredit = [
-                        'amount' => $amountFinal,
-                        'userId' => $extraParams['user']->id,
-                        'description' => 'Transferencia id: '.$transfer->id.' para el accountId Stripe: '.$destination,
-                        'status' => 2
-                    ];
-                    $credit = app("Modules\Icredit\Services\CreditService")->create($dataToCredit);
-                    */
+                    
+                    \Log::info('Icommercestripe: Charge Process - Created Transfer to: '.$accountInfor['accountId']); 
 
                 } catch (Exception $e) {
-                    \Log::error('Icommercestripe: Response - Transfer - Message: '.$e->getMessage());
+                    \Log::error('Icommercestripe: Charge Process - Transfer - Message: '.$e->getMessage());
                 }
+                
 
-            }else{
-                \Log::info('Icommercestripe: Response - NO EXIST ITEM PRODUCT ORGANIZATION ID');  
-            }
-            
-        }
+
+           }else{
+                \Log::info('Icommercestripe: Charge Process - No Organization Id to Order Child ID: '.$orderChild->id);  
+           }
+
+        }//Foreach
+
 
     }
 

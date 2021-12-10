@@ -88,14 +88,14 @@ if (!function_exists('stripeValidateAccountRequirements')) {
 * @param 
 * @return
 */
-if(!function_exists('stripeGetItemConvertion')){
-    function stripeGetItemConvertion($orderCurrencyCode,$accountCurrencyCode,$item,$currencyValue){
+if(!function_exists('stripeGetAmountConvertion')){
+    function stripeGetAmountConvertion($orderCurrencyCode,$accountCurrencyCode,$amount,$currencyValue){
         
         // Need Convertion
         if($orderCurrencyCode!=$accountCurrencyCode){
-            $totalItem = round($item->price / $currencyValue,2);
+            $totalItem = round($amount / $currencyValue,2);
         }else{
-            $totalItem = $item->price;
+            $totalItem = $amount;
         }
 
         return $totalItem;
