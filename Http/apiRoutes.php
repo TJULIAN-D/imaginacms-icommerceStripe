@@ -53,6 +53,18 @@ $router->group(['prefix' => 'icommercestripe/v1'], function (Router $router) {
             'middleware' => ['auth:api']
         ]);
 
+        $router->get('/transfer', [
+            'as' => 'icommercestripe.api.stripe.connect.connectGetTransfer',
+            'uses' => 'IcommerceStripeApiController@connectGetTransfer',
+            'middleware' => ['auth:api']
+        ]);
+
+        $router->get('/balance-transaction', [
+            'as' => 'icommercestripe.api.stripe.connect.connectGetBalanceTransaction',
+            'uses' => 'IcommerceStripeApiController@connectGetBalanceTransaction',
+            'middleware' => ['auth:api']
+        ]);
+
     });
    
 

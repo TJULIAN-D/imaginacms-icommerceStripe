@@ -468,6 +468,68 @@ class IcommerceStripeApiController extends BaseApiController
     }
 
     /**
+     * 
+     * @param Requests request
+     * @return Transfer Stripe
+    */
+    public function connectGetTransfer(Request $request){
+        
+        \Log::info('Icommercestripe: Connect - Get Balance Transfer');
+
+        try {
+
+            $data = $request['attributes'] ?? [];//Get data
+
+            // Payment Method Configuration
+            $paymentMethod = stripeGetConfiguration();
+
+            $response = $this->stripeApi->retrieveTransfer($paymentMethod->options->secretKey,$data['transferId']);
+
+
+        } catch (\Exception $e) {
+            \Log::error("Icommercestripe: Connect - Get Country ".$e->getMessage());
+            $status = 500;
+            $response = [
+                'errors' => $e->getMessage()
+            ];
+        }
+
+        return response()->json($response, $status ?? 200);
+
+    }
+
+    /**
+     * 
+     * @param Requests request
+     * @return Balance Transaction Stripe
+    */
+    public function connectGetBalanceTransaction(Request $request){
+        
+        \Log::info('Icommercestripe: Connect - Get Balance Transaction');
+
+        try {
+
+            $data = $request['attributes'] ?? [];//Get data
+
+            // Payment Method Configuration
+            $paymentMethod = stripeGetConfiguration();
+
+            $response = $this->stripeApi->retrieveBalanceTransaction($paymentMethod->options->secretKey,$data['balanceIdTransaction']);
+
+
+        } catch (\Exception $e) {
+            \Log::error("Icommercestripe: Connect - Get Country ".$e->getMessage());
+            $status = 500;
+            $response = [
+                'errors' => $e->getMessage()
+            ];
+        }
+
+        return response()->json($response, $status ?? 200);
+
+    }
+
+    /**
      * Update Order and Transaction
      * @param $event - (stripe information webhook)
      * @return
@@ -523,7 +585,9 @@ class IcommerceStripeApiController extends BaseApiController
         //Get order id from transfer group
         $infor = stripeGetInforTransferGroup($charge->transfer_group);
         $order = $this->order->find($infor[1]);
-        //$order = $this->order->find(33);// Testinnnnggggggggg
+        
+        // Testing data
+        //$order = $this->order->find(49);
 
         //Set Stripe Transfer
         \Stripe\Stripe::setApiKey($this->paymentMethod->options->secretKey);
@@ -571,7 +635,10 @@ class IcommerceStripeApiController extends BaseApiController
                             'CM'=> $comision,
                             'TT' => $amountTransfer
                         ]
+                        //'expand' => ['destination_payment.balance_transaction']
                     ]);
+
+                    //\Log::info('Balance Transaction: '.json_encode($transfer->destination_payment->balance_transaction));
                     
                     \Log::info('Icommercestripe: Charge Process - Created Transfer to: '.$accountInfor['accountId']);
                     

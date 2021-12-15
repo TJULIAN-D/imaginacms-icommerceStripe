@@ -203,5 +203,38 @@ class StripeApiController extends BaseApiController
         
     }
 
+
+    /**
+    *  API - Retrieve Transfer
+    * @param $secretKey
+    * @param transferId
+    * @return
+    */
+    public function retrieveTransfer($secretKey,$transferId){
+
+        $stripe = new \Stripe\StripeClient($secretKey);
+
+        $result = $stripe->transfers->retrieve($transferId,['expand' => ['destination_payment.balance_transaction']]);
+
+        return $result;
+        
+    }
+
+    /**
+    *  API - Retrieve Balance Transaction
+    * @param $secretKey
+    * @param balanceI
+    * @return
+    */
+    public function retrieveBalanceTransaction($secretKey,$balanceId){
+
+        $stripe = new \Stripe\StripeClient($secretKey);
+
+        $result = $stripe->balanceTransactions->retrieve($balanceId,[]);
+
+        return $result;
+        
+    }
+
  
 }
