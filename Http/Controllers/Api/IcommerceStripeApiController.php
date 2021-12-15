@@ -23,6 +23,7 @@ use Modules\Icommercestripe\Http\Controllers\Api\StripeApiController;
 
 // Services
 use Modules\Icommercestripe\Services\StripeService;
+use Modules\Icommercestripe\Services\CreditService;
 
 
 class IcommerceStripeApiController extends BaseApiController
@@ -36,6 +37,7 @@ class IcommerceStripeApiController extends BaseApiController
 
     private $stripeApi;
     private $stripeService;
+    private $creditService;
 
     private $paymentMethod;
     
@@ -46,7 +48,8 @@ class IcommerceStripeApiController extends BaseApiController
         TransactionRepository $transaction,
         TransactionApiController $transactionController,
         StripeApiController $stripeApi,
-        StripeService $stripeService
+        StripeService $stripeService,
+        CreditService $creditService
     ){
         $this->icommercestripe = $icommercestripe;
 
@@ -57,6 +60,7 @@ class IcommerceStripeApiController extends BaseApiController
 
         $this->stripeApi = $stripeApi;
         $this->stripeService = $stripeService;
+        $this->creditService = $creditService;
 
         // Payment Method Configuration
         $this->paymentMethod = stripeGetConfiguration();
@@ -475,9 +479,13 @@ class IcommerceStripeApiController extends BaseApiController
         // Get all infor about status    
         $details = $this->stripeService->getStatusDetail($event); 
 
+        //==============JUST TESTINNNNNNNNNNG
+        //$details['orderId'] = 43;
+        //$details['transactionId'] = 32;
+
         if(isset($details['orderId'])){
 
-            \Log::info('Icommercestripe: Response - Updating Order: '.$details['orderId']);
+            \Log::info('Icommercestripe: Response - Order Process - Updating Order: '.$details['orderId']);
 
                 
             // Update Transaction
@@ -537,7 +545,7 @@ class IcommerceStripeApiController extends BaseApiController
                 //Get account Id to destination transfer
                 $accountInfor = $this->stripeService->getAccountIdByOrganizationId($orderChild->organization_id,true);
                 
-                // Get the amount in the currency of the Main Account
+                // Get the amount in the currency of the Stripe Main Account
                 $totalOrder = stripeGetAmountConvertion($orderChild->currency_code,$currencyAccount,$orderChild->total,$currencyConvertionValue);
                
                 // Get Comision
@@ -549,7 +557,7 @@ class IcommerceStripeApiController extends BaseApiController
                 //All API requests expect amounts to be provided in a currency’s smallest unit
                 $amountInCents = $amountTransfer * 100;
 
-                 try{
+                try{
                     
                     $transfer = \Stripe\Transfer::create([
                         'amount' => $amountInCents,
@@ -565,12 +573,15 @@ class IcommerceStripeApiController extends BaseApiController
                         ]
                     ]);
                     
-                    \Log::info('Icommercestripe: Charge Process - Created Transfer to: '.$accountInfor['accountId']); 
+                    \Log::info('Icommercestripe: Charge Process - Created Transfer to: '.$accountInfor['accountId']);
+                    
+                    // Create credit Order Child and Order Parent
+                    $this->creditService->create($orderChild,$accountInfor,$transfer,$order);
+
 
                 } catch (Exception $e) {
                     \Log::error('Icommercestripe: Charge Process - Transfer - Message: '.$e->getMessage());
                 }
-                
 
 
            }else{
@@ -579,6 +590,7 @@ class IcommerceStripeApiController extends BaseApiController
 
         }//Foreach
 
+        \Log::info('Icommercestripe: Charge Process - END');
 
     }
 
