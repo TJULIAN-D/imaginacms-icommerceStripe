@@ -40,6 +40,7 @@ class StripeService
       'success_url' => $order->url,
       'cancel_url' => url('/'),
       'metadata' => $metaData
+      //'expand' => ['payment_intent']
     );
 
     return $params;
@@ -151,11 +152,13 @@ class StripeService
       // Get the amount in the currency of the Main Account
       $totalItem = stripeGetAmountConvertion($order->currency_code,$currencyAccount,$item->price,$currencyConvertionValue);
 
+      //$totalItem = $item->price;
+
       //All API requests expect amounts to be provided in a currency’s smallest unit
       $amountInCents = $totalItem * 100;
 
       $itemInfor['price_data'] = [
-        'currency' => $currencyAccount,
+        'currency' => $currencyAccount,//$order->currency_code,
         'product_data' => [
           'name' => $item->product->name,
           'metadata' => ['id'=>$item->product->id]

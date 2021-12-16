@@ -45,11 +45,11 @@ class StripeApiController extends BaseApiController
 
             // Create a Session
             $response = \Stripe\Checkout\Session::create($conf);
+            //\Log::info('Icommercestripe: Generate Link - Response: '.$response);
 
             return $response;
 
-            //\Log::info('Icommercestripe: Generate Link - Response: '.$response);
-
+            
         } catch (\Exception $e) {
 
             \Log::error('Icommercestripe: Generate Link - Message: '.$e->getMessage().' - File: '.$e->getFile().' - Line: '.$e->getLine());
