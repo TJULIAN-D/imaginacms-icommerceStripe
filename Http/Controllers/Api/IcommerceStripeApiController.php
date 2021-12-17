@@ -102,7 +102,7 @@ class IcommerceStripeApiController extends BaseApiController
      */
     public function init(Request $request){
       
-        \Log::info('Icommercestripe: INIT - '.time());
+        \Log::info('Icommercestripe: INIT: '.time());
 
         try {
             
@@ -172,7 +172,7 @@ class IcommerceStripeApiController extends BaseApiController
      */
     public function response(Request $request){
 
-        \Log::info('Icommercestripe: Response - INIT - '.time());
+        \Log::info('Icommercestripe: Response: '.time());
 
         // Default Response
         $response = ['status'=> 'error'];
@@ -194,7 +194,7 @@ class IcommerceStripeApiController extends BaseApiController
 
         // Check Event Type
         if(isset($event->type)){
-            \Log::info('Icommercestripe: Response - Event Type: '.$event->type);
+            \Log::info('Icommercestripe: Response|EventType: '.$event->type);
 
             if($event->data->object->object=="checkout.session"){
                 $this->orderProcess($event);
@@ -206,7 +206,7 @@ class IcommerceStripeApiController extends BaseApiController
         }
         
         
-        \Log::info('Icommercestripe: Response - END ');
+        \Log::info('Icommercestripe: Response|END');
 
         return response()->json($response, $status ?? 200);
        
@@ -536,18 +536,18 @@ class IcommerceStripeApiController extends BaseApiController
     */
     public function orderProcess($event){
 
-        \Log::info('Icommercestripe: Response - Order Process - INIT - '.time());
+        \Log::info('Icommercestripe: Response|OrderProcess|INIT: '.time());
         
         // Get all infor about status    
         $details = $this->stripeService->getStatusDetail($event); 
 
         //==============JUST TESTINNNNNNNNNNG
-        //$details['orderId'] = 43;
-        //$details['transactionId'] = 32;
+        //$details['orderId'] = 98;
+        //$details['transactionId'] = 62;
 
         if(isset($details['orderId'])){
 
-            \Log::info('Icommercestripe: Response - Order Process - Updating Order: '.$details['orderId']);
+            \Log::info('Icommercestripe: Response|OrderProcess|Updating OrderId: '.$details['orderId']);
 
                 
             // Update Transaction
@@ -561,13 +561,14 @@ class IcommerceStripeApiController extends BaseApiController
             $orderUP = $this->validateResponseApi(
                 $this->orderController->update($details['orderId'],new Request(
                     ["attributes" =>[
-                            'status_id' => $details['newStatus']
+                        'status_id' => $details['newStatus'],
+                        'comment' => 'Comentario de prueba'
                     ]
                 ]))
             );
                 
         }
-        \Log::info('Icommercestripe: Response - Order Process - END - '.time());
+        \Log::info('Icommercestripe: Response|OrderProcess|END: '.time());
 
     }
 
@@ -580,7 +581,7 @@ class IcommerceStripeApiController extends BaseApiController
 
         // Get Charge Infor
         $charge = $event->data->object;
-        \Log::info('Icommercestripe: Charge Process - Id: '.$charge->id);
+        \Log::info('Icommercestripe: ChargeProcess|ChargeId: '.$charge->id);
         
         //Get order id from transfer group
         $infor = stripeGetInforTransferGroup($charge->transfer_group);
@@ -604,7 +605,7 @@ class IcommerceStripeApiController extends BaseApiController
         // Each Transfer to Order Child
         foreach ($order->children as $key => $orderChild) {
            if(!empty($orderChild->organization_id)){
-                \Log::info('Icommercestripe: Charge Process - OrderChild ID: '.$orderChild->id); 
+                \Log::info('Icommercestripe: ChargeProcess|OrderChild ID: '.$orderChild->id); 
 
                 //Get account Id to destination transfer
                 $accountInfor = $this->stripeService->getAccountIdByOrganizationId($orderChild->organization_id,true);
@@ -640,24 +641,24 @@ class IcommerceStripeApiController extends BaseApiController
 
                     //\Log::info('Balance Transaction: '.json_encode($transfer->destination_payment->balance_transaction));
                     
-                    \Log::info('Icommercestripe: Charge Process - Created Transfer to: '.$accountInfor['accountId']);
+                    \Log::info('Icommercestripe: ChargeProcess|Created Transfer to: '.$accountInfor['accountId']);
                     
                     // Create credit Order Child and Order Parent
                     $this->creditService->create($orderChild,$accountInfor,$transfer,$order);
 
 
                 } catch (Exception $e) {
-                    \Log::error('Icommercestripe: Charge Process - Transfer - Message: '.$e->getMessage());
+                    \Log::error('Icommercestripe: ChargeProcess|Transfer|Message: '.$e->getMessage());
                 }
 
 
            }else{
-                \Log::info('Icommercestripe: Charge Process - No Organization Id to Order Child ID: '.$orderChild->id);  
+                \Log::info('Icommercestripe: ChargeProcess|No Organization Id to Order Child ID: '.$orderChild->id);  
            }
 
         }//Foreach
 
-        \Log::info('Icommercestripe: Charge Process - END');
+        \Log::info('Icommercestripe: ChargeProcess|END');
 
     }
 

@@ -292,7 +292,7 @@ class StripeService
 
     $comisionFinal = round($comision, 2);
 
-    \Log::info('Icommercestripe: StripeService - Comision: '.$comisionFinal); 
+    \Log::info('Icommercestripe: StripeService|GetComision: '.$comisionFinal); 
 
     return $comisionFinal;
   }

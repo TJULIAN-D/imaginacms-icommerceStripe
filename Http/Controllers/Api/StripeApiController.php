@@ -30,7 +30,7 @@ class StripeApiController extends BaseApiController
     */
     public function generateLink($paymentMethod,$order,$transaction){
 
-        \Log::info('Icommercestripe: Generate Link to order: '.$order->id." transaction: ".$transaction->id);
+        \Log::info('Icommercestripe: StripeApi|GenerateLink|OrderId: '.$order->id." transactioId: ".$transaction->id);
            
         try {
 
@@ -52,7 +52,7 @@ class StripeApiController extends BaseApiController
             
         } catch (\Exception $e) {
 
-            \Log::error('Icommercestripe: Generate Link - Message: '.$e->getMessage().' - File: '.$e->getFile().' - Line: '.$e->getLine());
+            \Log::error('Icommercestripe: StripeApi|GenerateLink|Message: '.$e->getMessage().' - File: '.$e->getFile().' - Line: '.$e->getLine());
 
             //Message Error
             $status = 500;
@@ -74,7 +74,7 @@ class StripeApiController extends BaseApiController
     */
     public function createAccount($secretKey,$attr){
 
-        \Log::info('Icommercestripe: create Account');
+        \Log::info('Icommercestripe: StripeApi|CreateAccount');
 
         $stripe = new \Stripe\StripeClient($secretKey);
 
@@ -102,7 +102,7 @@ class StripeApiController extends BaseApiController
 
         } catch (Exception $e) {
             
-            \Log::error('Icommercestripe: Create Account - Message: '.$e->getMessage());
+            \Log::error('Icommercestripe: StripeApi|CreateAccount|Message: '.$e->getMessage());
             //Message Error
             $status = 500;
             $response = [
@@ -122,7 +122,7 @@ class StripeApiController extends BaseApiController
     */
     public function createLinkAccount($secretKey,$accountId){
 
-        \Log::info('Icommercestripe: create Link Account');
+        \Log::info('Icommercestripe: StripeApi|CreateLinkAccount');
 
         $stripe = new \Stripe\StripeClient($secretKey);
 
@@ -158,7 +158,7 @@ class StripeApiController extends BaseApiController
     */
     public function createLoginLink($secretKey,$accountId){
 
-        \Log::info('Icommercestripe: create Login Link');
+        \Log::info('Icommercestripe: StripeApi|CreateLoginLink');
 
         $stripe = new \Stripe\StripeClient($secretKey);
 

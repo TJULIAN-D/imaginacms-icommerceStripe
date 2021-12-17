@@ -18,7 +18,7 @@ class CreditService
 	*/
 	public function getData($event){
 		
-		\Log::info('Icommercestripe: CreditService - Get Data');  
+		\Log::info('Icommercestripe: CreditService|GetData');  
 
 		// Data Init
 		$data = [];
@@ -32,9 +32,9 @@ class CreditService
         // Currency Value from Icommerce
         $currencyConvertionValue = stripeGetCurrencyValue($currencyAccount);
 
-        if(!empty($order->organization_id)){
+        \Log::info('Icommercestripe: CreditService|GetData|OrganizationId: '.$order->organization_id);
 
-        	\Log::info('Icommercestripe: CreditService - Order Child'); 
+        if(!empty($order->organization_id)){
 
         	//Get account Id to destination transfer
             $accountInfor = $this->stripeService->getAccountIdByOrganizationId($order->organization_id,true);
@@ -61,7 +61,7 @@ class CreditService
 	*/
 	public function create($order,$accountInfor,$transfer,$orderParent){
 
-		\Log::info('Icommercestripe: CreditService - Create Credit'); 
+		\Log::info('Icommercestripe: CreditService|CreateCredit'); 
 
 		// Monto del Credito (En la moneda de la orden)
         $totalOrder = $order->total;
