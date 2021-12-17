@@ -37,6 +37,13 @@ return [
     */
     'tos_acceptance' => [
         'service_agreement' => 'recipient'
-    ]
+    ],
+
+/*
+   |--------------------------------------------------------------------------
+   | Configurations to credit
+   |--------------------------------------------------------------------------
+*/
+   'creditService' => 'Modules\Icommercestripe\Services\CreditService',
     
 ];
