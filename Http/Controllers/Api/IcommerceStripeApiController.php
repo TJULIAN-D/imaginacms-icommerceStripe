@@ -542,8 +542,8 @@ class IcommerceStripeApiController extends BaseApiController
         $details = $this->stripeService->getStatusDetail($event); 
 
         //==============JUST TESTINNNNNNNNNNG
-        //$details['orderId'] = 98;
-        //$details['transactionId'] = 62;
+        //$details['orderId'] = 161;
+        //$details['transactionId'] = 31;
 
         if(isset($details['orderId'])){
 
@@ -562,7 +562,7 @@ class IcommerceStripeApiController extends BaseApiController
                 $this->orderController->update($details['orderId'],new Request(
                     ["attributes" =>[
                         'status_id' => $details['newStatus'],
-                        'comment' => 'Comentario de prueba'
+                        'comment' => 'Orden actualizada por: Stripe'
                     ]
                 ]))
             );
