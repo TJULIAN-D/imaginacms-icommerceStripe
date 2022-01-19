@@ -69,7 +69,7 @@ class IcommerceStripeApiController extends BaseApiController
 
     /**
     * Init Calculations (Validations to checkout)
-    * @param Requests request
+    * @param Request request
     * @return mixed
     */
     public function calculations(Request $request)
@@ -92,14 +92,11 @@ class IcommerceStripeApiController extends BaseApiController
     
     }
 
-    
-
     /**
-     * Init data to checkout
-     * @param Requests request
-     * @param Requests orderId
-     * @return route
-     */
+    * Init data to checkout
+    * @param Request - orderId
+    * @return route
+    */
     public function init(Request $request){
       
         \Log::info('Icommercestripe: INIT: '.time());
@@ -165,11 +162,11 @@ class IcommerceStripeApiController extends BaseApiController
 
     }
 
-     /**
-     * Response
-     * @param Requests request
-     * @return route
-     */
+    /**
+    * Response
+    * @param Request request
+    * @return route
+    */
     public function response(Request $request){
 
         \Log::info('Icommercestripe: Response: '.time());
@@ -213,13 +210,13 @@ class IcommerceStripeApiController extends BaseApiController
     }
 
     /**
-     * Create Account with Link to Onboarding proccess
-     * @param Requests request
-     * @return url
+    * Create Account with Link to Onboarding proccess
+    * @param Request request
+    * @return url
     */
     public function connectCreateAccountLinkOnboarding(Request $request){
         
-        \Log::info('Icommercestripe: Connect - Create Account Link Onboarding');
+        \Log::info('Icommercestripe: Connect|CreateAccountLinkOnboarding');
 
         $response['status'] = "success";
 
@@ -262,7 +259,8 @@ class IcommerceStripeApiController extends BaseApiController
             ];
 
         } catch (\Exception $e) {
-            \Log::error("Icommercestripe: Connect - Create Account Link Onboarding: ".$e->getMessage());
+            \Log::error("Icommercestripe: Connect|CreateAccountLinkOnboarding|Message: ".$e->getMessage());
+
             $status = 500;
             $response = [
                 'status' => "error",
@@ -277,13 +275,13 @@ class IcommerceStripeApiController extends BaseApiController
 
     
     /**
-     * Get Account Data and Create urlPanel (Login Link) if it is not saved in profile field
-     * @param Requests request
-     * @return url
+    * Get Account Data and Create urlPanel (Login Link) if it is not saved in profile field
+    * @param Request request
+    * @return url
     */
     public function connectGetAccount(Request $request){
         
-        \Log::info('Icommercestripe: Connect - Get Account');
+        \Log::info('Icommercestripe: Connect|GetAccount');
 
         try {
 
@@ -301,7 +299,7 @@ class IcommerceStripeApiController extends BaseApiController
                     $accountId = $userConfig->value->accountId;
 
                 }else{
-                    throw new \Exception("User Payout Config - No Exist", 204);
+                    throw new \Exception("User PayoutConfigStripe Data - No Exist", 204);
                 }
             }
 
@@ -344,7 +342,7 @@ class IcommerceStripeApiController extends BaseApiController
             
                 
         } catch (\Exception $e) {
-            \Log::error("Icommercestripe: Connect - Get Account ".$e->getMessage());
+            \Log::error("Icommercestripe: Connect|GetAccount|Message: ".$e->getMessage());
             $status = $e->getCode();
             $response = [
                 'errors' => $e->getMessage()
@@ -356,13 +354,13 @@ class IcommerceStripeApiController extends BaseApiController
     }
 
     /**
-     * Create login link
-     * @param Request accountId
-     * @return url
+    * Create login link
+    * @param Request - attributes['accountId']
+    * @return url
     */
     public function connectCreateLoginLink(Request $request){
         
-        \Log::info('Icommercestripe: Connect - Create Login Link');
+        \Log::info('Icommercestripe: Connect|CreateLoginLink');
 
         try {
 
@@ -376,7 +374,7 @@ class IcommerceStripeApiController extends BaseApiController
             $response = $result;
 
         } catch (\Exception $e) {
-            \Log::error("Icommercestripe: Connect - Create Link: ".$e->getMessage());
+            \Log::error("Icommercestripe: Connect|CreateLoginLink|Message: ".$e->getMessage());
             $status = 500;
             $response = [
                 'errors' => $e->getMessage()
@@ -389,7 +387,7 @@ class IcommerceStripeApiController extends BaseApiController
 
 
     /**
-    * Just Testing response
+    * Just Testing - not used yet in a process
     * @param Requests request
     * @return
     */
@@ -427,13 +425,13 @@ class IcommerceStripeApiController extends BaseApiController
     }
 
     /**
-     * 
-     * @param Requests request
-     * @return Countries Stripe
+    * Just Testing - not used yet in a process
+    * @param Request - attributes['countryCode']
+    * @return Countries Stripe
     */
     public function connectGetCountry(Request $request){
         
-        \Log::info('Icommercestripe: Connect - Get Country');
+        \Log::info('Icommercestripe: Connect|GetCountry');
 
         try {
 
@@ -456,7 +454,7 @@ class IcommerceStripeApiController extends BaseApiController
             }
 
         } catch (\Exception $e) {
-            \Log::error("Icommercestripe: Connect - Get Country ".$e->getMessage());
+            \Log::error("Icommercestripe: Connect|GetCountry|Message ".$e->getMessage());
             $status = 500;
             $response = [
                 'errors' => $e->getMessage()
@@ -468,13 +466,14 @@ class IcommerceStripeApiController extends BaseApiController
     }
 
     /**
-     * 
-     * @param Requests request
-     * @return Transfer Stripe
+    * Just Testing - not used yet in a process
+    * Get information about a Transfer with the "destination_payment" and "balance_transaction"
+    * @param Request - attributes['transferId']
+    * @return Transfer Stripe
     */
     public function connectGetTransfer(Request $request){
         
-        \Log::info('Icommercestripe: Connect - Get Balance Transfer');
+        \Log::info('Icommercestripe: Connect|GetTransfer');
 
         try {
 
@@ -485,9 +484,8 @@ class IcommerceStripeApiController extends BaseApiController
 
             $response = $this->stripeApi->retrieveTransfer($paymentMethod->options->secretKey,$data['transferId']);
 
-
         } catch (\Exception $e) {
-            \Log::error("Icommercestripe: Connect - Get Country ".$e->getMessage());
+            \Log::error("Icommercestripe: Connect|GetTransfer|Message ".$e->getMessage());
             $status = 500;
             $response = [
                 'errors' => $e->getMessage()
@@ -499,13 +497,14 @@ class IcommerceStripeApiController extends BaseApiController
     }
 
     /**
-     * 
-     * @param Requests request
-     * @return Balance Transaction Stripe
+    * Just Testing - not used yet in a process
+    * Get information about a Balance Transaction
+    * @param Request - attributes['balanceIdTransaction']
+    * @return Balance Transaction Stripe
     */
     public function connectGetBalanceTransaction(Request $request){
         
-        \Log::info('Icommercestripe: Connect - Get Balance Transaction');
+        \Log::info('Icommercestripe: Connect|GetBalanceTransaction');
 
         try {
 
@@ -518,7 +517,7 @@ class IcommerceStripeApiController extends BaseApiController
 
 
         } catch (\Exception $e) {
-            \Log::error("Icommercestripe: Connect - Get Country ".$e->getMessage());
+            \Log::error("Icommercestripe: Connect|GetBalanceTransaction|Message: ".$e->getMessage());
             $status = 500;
             $response = [
                 'errors' => $e->getMessage()
@@ -530,9 +529,9 @@ class IcommerceStripeApiController extends BaseApiController
     }
 
     /**
-     * Update Order and Transaction
-     * @param $event - (stripe information webhook)
-     * @return
+    * Update Order and Transaction
+    * @param $event - (stripe information webhook)
+    * @return
     */
     public function orderProcess($event){
 
