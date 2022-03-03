@@ -250,6 +250,15 @@ class IcommerceStripeApiController extends BaseApiController
             // Create Account Link
             $accountLink = $this->stripeApi->createLinkAccount($this->paymentMethod->options->secretKey,$accountId);
 
+            //Event to Activity
+            if (is_module_enabled("Igamification")) event(new \Modules\Igamification\Events\ActivityWasCompleted([
+                    'extraData' => [
+                        'systemNameActivity' => 'setup-wallet'
+                    ]
+                ])
+            );
+            
+
             //Response
             $response["description"] = trans("icommercestripe::icommercestripes.messages.verifyAccount").$accountLink;
 
@@ -309,6 +318,8 @@ class IcommerceStripeApiController extends BaseApiController
             // Check if exist urlPanel
             if(isset($userConfig) && isset($userConfig->value->urlPanel)){
 
+                \Log::info('Icommercestripe: Connect|GetAccount|The user has an urlPanel');
+
                 $responseTent['urlPanel'] = $userConfig->value->urlPanel;
 
             }else{
@@ -324,6 +335,16 @@ class IcommerceStripeApiController extends BaseApiController
 
                     // Add to response
                     $responseTent['urlPanel'] = $responseLoginLink->url;
+
+                    /*
+                    if (is_module_enabled("Igamification")) event(new \Modules\ Igamification\Events\ActivityWasCompleted([
+                                'extraData' => [
+                                'systemNameActivity' => 'setup-wallet'
+                            ]
+                        ])
+                    );
+                    */
+                    
 
                 }else{
 
