@@ -630,45 +630,50 @@ class IcommerceStripeApiController extends BaseApiController
                 //Get account Id to destination transfer
                 $accountInfor = $this->stripeService->getAccountIdByOrganizationId($orderChild->organization_id,true);
                 
-                // Get the amount in the currency of the Stripe Main Account
-                $totalOrder = stripeGetAmountConvertion($orderChild->currency_code,$currencyAccount,$orderChild->total,$currencyConvertionValue);
-               
-                // Get Comision
-                $comision = $this->stripeService->getComisionToDestination($accountInfor['user'],$totalOrder);
+                if(!is_null($accountInfor)){
 
-                //Amount to Transfer
-                $amountTransfer = $totalOrder - $comision;
-               
-                //All API requests expect amounts to be provided in a currency’s smallest unit
-                $amountInCents = $amountTransfer * 100;
+                    // Get the amount in the currency of the Stripe Main Account
+                    $totalOrder = stripeGetAmountConvertion($orderChild->currency_code,$currencyAccount,$orderChild->total,$currencyConvertionValue);
+                   
+                    // Get Comision
+                    $comision = $this->stripeService->getComisionToDestination($accountInfor['user'],$totalOrder);
 
-                try{
-                    
-                    $transfer = \Stripe\Transfer::create([
-                        'amount' => $amountInCents,
-                        'currency' => $currencyAccount,
-                        'source_transaction' => $charge->id,
-                        'destination' => $accountInfor['accountId'],
-                        'transfer_group' => $charge->transfer_group,
-                        'description' => $description.'- Transfer - Oc #'.$orderChild->id,
-                        'metadata' => [
-                            'TO' => $totalOrder,
-                            'CM'=> $comision,
-                            'TT' => $amountTransfer
-                        ]
-                        //'expand' => ['destination_payment.balance_transaction']
-                    ]);
+                    //Amount to Transfer
+                    $amountTransfer = $totalOrder - $comision;
+                   
+                    //All API requests expect amounts to be provided in a currency’s smallest unit
+                    $amountInCents = $amountTransfer * 100;
 
-                    //\Log::info('Balance Transaction: '.json_encode($transfer->destination_payment->balance_transaction));
-                    
-                    \Log::info('Icommercestripe: ChargeProcess|Created Transfer to: '.$accountInfor['accountId']);
-                    
-                    // Create credit Order Child and Order Parent
-                    $this->creditService->create($orderChild,$accountInfor,$transfer,$order);
+                    try{
+                        
+                        $transfer = \Stripe\Transfer::create([
+                            'amount' => $amountInCents,
+                            'currency' => $currencyAccount,
+                            'source_transaction' => $charge->id,
+                            'destination' => $accountInfor['accountId'],
+                            'transfer_group' => $charge->transfer_group,
+                            'description' => $description.'- Transfer - Oc #'.$orderChild->id,
+                            'metadata' => [
+                                'TO' => $totalOrder,
+                                'CM'=> $comision,
+                                'TT' => $amountTransfer
+                            ]
+                            //'expand' => ['destination_payment.balance_transaction']
+                        ]);
+
+                        //\Log::info('Balance Transaction: '.json_encode($transfer->destination_payment->balance_transaction));
+                        
+                        \Log::info('Icommercestripe: ChargeProcess|Created Transfer to: '.$accountInfor['accountId']);
+                        
+                        // Create credit Order Child and Order Parent
+                        $this->creditService->create($orderChild,$accountInfor,$transfer,$order);
 
 
-                } catch (Exception $e) {
-                    \Log::error('Icommercestripe: ChargeProcess|Transfer|Message: '.$e->getMessage());
+                    } catch (Exception $e) {
+                        \Log::error('Icommercestripe: ChargeProcess|Transfer|Message: '.$e->getMessage());
+                    }
+                }else{
+                   \Log::info('Icommercestripe: ChargeProcess: El destino no tiene cuenta connect y no se puede realizar la transferencia'); 
                 }
 
 

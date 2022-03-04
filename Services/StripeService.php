@@ -233,6 +233,7 @@ class StripeService
   /**
   * Get Account Id
   * @param $organizationId
+  * @param $extraData Boolean
   * @return $accountId
   */
   public function getAccountIdByOrganizationId($organizationId,$extraData = false){
@@ -241,6 +242,13 @@ class StripeService
 
     $userConfig = $this->findPayoutConfigUser($organization->user_id);
 
+    //\Log::info("getAccountIdByOrganizationId | User Config: ".json_encode($userConfig));
+
+    //If the user doesn't have a stripe connect account
+    if(is_null($userConfig))
+      return null;
+
+    // ExtraData is to get more information about user
     if($extraData){
 
       $data['accountId'] = $userConfig->value->accountId;

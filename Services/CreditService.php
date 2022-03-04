@@ -36,21 +36,39 @@ class CreditService
 
         if(!empty($order->organization_id)){
 
-        	//Get account Id to destination transfer
+        	//Get account Id to destination transfer - Commented 04-03-2022
+            /*
             $accountInfor = $this->stripeService->getAccountIdByOrganizationId($order->organization_id,true);
+            */
 
-            // Get the amount in the currency of the Main Account
+            // Added 04-03-2022
+            $organization = app("Modules\Isite\Repositories\OrganizationRepository")->where('id',$order->organization_id)->first();
+
+            // Get the amount in the currency of the Main Account - Commented - 2021
             //$totalOrder = stripeGetAmountConvertion($order->currency_code,$currencyAccount,$order->total,$currencyConvertionValue);
 
             // Monto del Credito (En la moneda default del sitio)
             $totalOrder = $order->total;
 
-            // Get Comision
+            // Get Comision - Commented 04-03-2022
+            /*
             $comision = $this->stripeService->getComisionToDestination($accountInfor['user'],$totalOrder);
+            */
+
+           
+
+            // Get Comision - Added 04-03-2022
+            $user = app("Modules\User\Repositories\UserRepository")->find($organization->user_id);
+            $comision = $this->stripeService->getComisionToDestination($user,$totalOrder);
 
             //Amount to Transfer
             $data['amount'] = $totalOrder - $comision;
-            $data['userId'] = $accountInfor['user']->id;
+
+            //Commented 04-03-2022
+            //$data['userId'] = $accountInfor['user']->id;
+
+            // Added 04-03-2022
+            $data['userId'] = $organization->user_id;
         }
 
 		return $data;
