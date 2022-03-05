@@ -11,15 +11,15 @@ class StripeService
     $this->fieldRepository = app("Modules\Iprofile\Repositories\FieldRepository");
 	}
 
-  
+
   /**
   * Make Configuration to Payment
-  * @param 
-  * @return Array 
+  * @param
+  * @return Array
   */
   public function createConfigToTransferGroup($paymentMethod,$order,$transaction){
-        
-   
+
+
     // Meta Data
     $metaData = [
       "orderId" => $order->id,
@@ -49,19 +49,19 @@ class StripeService
 
   /**
   * Make Configuration Implementation Destination Charge
-  * @param 
-  * @return Array 
+  * @param
+  * @return Array
   */
 	public function createConfigToDestinationCharge($paymentMethod,$order,$transaction){
-        
+
     //All API requests expect amounts to be provided in a currency’s smallest unit
     //$amount = $order->total * 100;
-    
+
     // Get Organization Id to First Item - All products have the same organization id
     $organizationId = $order->orderItems->first()->product->organization_id;
 
     //Comision
-    $feeAmount = $paymentMethod->options->comisionAmount; 
+    $feeAmount = $paymentMethod->options->comisionAmount;
     $applicationFeeAmount = $feeAmount * 100;
 
     // Meta Data
@@ -95,8 +95,8 @@ class StripeService
 
   /**
   * Get Status to Order
-  * @param 
-  * @return Int 
+  * @param
+  * @return Int
   */
   public function getStatusDetail($event){
 
@@ -128,22 +128,22 @@ class StripeService
         $details['orderId'] = $session->metadata->orderId;
         $details['transactionId'] = $session->metadata->orderId;
       }
-      
+
       \Log::info('Icommercestripe: getStatusDetail - New Order Status: '.$newStatus);
 
-      return $details; 
+      return $details;
 
   }
 
 
   /**
   * Get Line Items
-  * @param 
-  * @return Int 
+  * @param
+  * @return Int
   */
   public function getLineItems($order,$currencyAccount){
 
-    
+
     $currencyConvertionValue = stripeGetCurrencyValue($currencyAccount);
 
     $items = [];
@@ -197,17 +197,17 @@ class StripeService
   /**
   * Values to save or update in Configuration Payout User Profile Field
   * @param $payoutConfigValues - array
-  * @return Model 
+  * @return Model
   */
   public function syncDataUserField($payoutConfigValues){
 
     // Find Field
     $modelExist = $this->findPayoutConfigUser();
-    
+
     // Update Field
     if($modelExist){
-      
-      $oldValues = json_decode(json_encode($modelExist->value),true); 
+
+      $oldValues = json_decode(json_encode($modelExist->value),true);
       $dataField['value'] = array_merge($oldValues,$payoutConfigValues);
 
       $result = $this->fieldRepository->update($modelExist,$dataField);
@@ -224,7 +224,7 @@ class StripeService
       $result = $this->fieldRepository->create($dataField);
 
     }
-    
+
 
     return $result;
 
@@ -261,7 +261,7 @@ class StripeService
       return $userConfig->value->accountId;
 
     }
-    
+
 
   }
 
@@ -271,22 +271,27 @@ class StripeService
   * @return $comision
   */
   public function getComisionToDestination($user,$total){
-    
+
     $comision = 0;
 
     //Just for testing
     $subscription = app("Modules\Iplan\Repositories\SubscriptionRepository")
     ->where('entity_id','=',$user->id)
-    ->where('entity','=',get_class($user))->first();
+    ->where('entity','=',get_class($user))
+    ->orderBy('created_at', 'desc')
+    ->first();
 
-    //\Log::info('Icommercestripe: Response - Comision - Subscription: '.json_encode($subscription)); 
+    //\Log::info('Icommercestripe: Response - Comision - Subscription: '.json_encode($subscription));
+
+    //Falta - TODO no es necesario para Inmeet pero para otro caso puede aplicar
+    //Si no tiene una subscripcion o un plan obtener la comision Final de los datos configurados en el crud field del modulo
 
     if($subscription){
 
       $typeDiscount = $subscription->plan->options->transactionFeeType;
       $value = $subscription->plan->options->transactionFeeAmount;
 
-      //\Log::info('Icommercestripe: Response - Comision - TypeDiscount: '.$typeDiscount); 
+      //\Log::info('Icommercestripe: Response - Comision - TypeDiscount: '.$typeDiscount);
 
       if ($typeDiscount=="fixed"){
         $comision = $value;
@@ -300,11 +305,11 @@ class StripeService
 
     $comisionFinal = round($comision, 2);
 
-    \Log::info('Icommercestripe: StripeService|GetComision: '.$comisionFinal); 
+    \Log::info('Icommercestripe: StripeService|GetComision: '.$comisionFinal);
 
     return $comisionFinal;
   }
 
-    
+
 
 }
