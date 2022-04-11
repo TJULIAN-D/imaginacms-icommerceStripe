@@ -169,8 +169,6 @@ class IcommerceStripeApiController extends BaseApiController
     */
     public function response(Request $request){
 
-        \Log::info('Icommercestripe: Response: '.time());
-
         // Default Response
         $response = ['status'=> 'error'];
 
@@ -202,8 +200,6 @@ class IcommerceStripeApiController extends BaseApiController
 
         }
         
-        
-        \Log::info('Icommercestripe: Response|END');
 
         return response()->json($response, $status ?? 200);
        
@@ -556,20 +552,16 @@ class IcommerceStripeApiController extends BaseApiController
     */
     public function orderProcess($event){
 
-        \Log::info('Icommercestripe: Response|OrderProcess|INIT: '.time());
+        \Log::info('Icommercestripe: Response|OrderProcess|INIT');
         
         // Get all infor about status    
         $details = $this->stripeService->getStatusDetail($event); 
 
-        //==============JUST TESTINNNNNNNNNNG
-        //$details['orderId'] = 161;
-        //$details['transactionId'] = 31;
 
         if(isset($details['orderId'])){
 
-            \Log::info('Icommercestripe: Response|OrderProcess|Updating OrderId: '.$details['orderId']);
+            //\Log::info('Icommercestripe: Response|OrderProcess|Updating OrderId: '.$details['orderId']);
 
-                
             // Update Transaction
             $transaction = $this->validateResponseApi(
                 $this->transactionController->update($details['transactionId'],new Request([
@@ -588,7 +580,7 @@ class IcommerceStripeApiController extends BaseApiController
             );
                 
         }
-        \Log::info('Icommercestripe: Response|OrderProcess|END: '.time());
+        \Log::info('Icommercestripe: Response|OrderProcess|END');
 
     }
 
