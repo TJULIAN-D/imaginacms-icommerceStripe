@@ -57,7 +57,7 @@ class IcommercestripeDatabaseSeeder extends Seeder
             $this->addTranslation($paymentMethod,'es',$titleTrans,$descriptionTrans);
 
             //Seed Form Connect
-            //$this->call(IcommercestripeFormConnectSeeder::class,false,['paymentMethod' => $result]);
+            $this->call(IcommercestripeFormConnectSeeder::class,false,['paymentMethod' => $paymentMethod]);
 
         }else{
 
@@ -66,7 +66,7 @@ class IcommercestripeDatabaseSeeder extends Seeder
         }
 
         //Seed Form Connect
-        $this->call(IcommercestripeFormConnectSeeder::class,false,['paymentMethod' => $result]);
+        //$this->call(IcommercestripeFormConnectSeeder::class,false,['paymentMethod' => $result]);
    
     }
 
