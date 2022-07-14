@@ -4,9 +4,6 @@
 ```bash
 composer require imagina/icommercestripe-module=v8.x-dev
 ```
-```bash
-composer require stripe/stripe-php
-```
 
 ## Enable the module
 ```bash
