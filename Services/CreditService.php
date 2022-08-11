@@ -6,11 +6,11 @@ class CreditService
 {
 
 	private $stripeService;
-	private $creditService;
+	//private $creditService;
 
 	public function __construct(){
     	$this->stripeService = app("Modules\Icommercestripe\Services\StripeService");
-    	$this->creditService = app("Modules\Icredit\Services\CreditService");
+    	//$this->creditService = app("Modules\Icredit\Services\CreditService");
 	}
 
 	/*
@@ -101,7 +101,8 @@ class CreditService
             'relatedId' => $order->id,
             'relatedType' => get_class($order)
         ];
-        $credit = $this->creditService->create($dataToCredit);
+        //$credit = $this->creditService->create($dataToCredit);
+        $credit = app("Modules\Icredit\Services\CreditService")->create($dataToCredit);
 
 
         // Save Credit - Order Padre
@@ -112,7 +113,8 @@ class CreditService
             'relatedId' => $orderParent->id,
             'relatedType' => get_class($order)
          ];
-        $credit = $this->creditService->create($dataToCredit);
+        //$credit = $this->creditService->create($dataToCredit);
+        $credit = app("Modules\Icredit\Services\CreditService")->create($dataToCredit);
 
 
 	}
