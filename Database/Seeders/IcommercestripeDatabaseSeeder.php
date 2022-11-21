@@ -18,6 +18,8 @@ class IcommercestripeDatabaseSeeder extends Seeder
         
         Model::unguard();
 
+        $this->call(IcommercestripeModuleTableSeeder::class);
+        
         if(!is_module_enabled('Icommercestripe')){
             $this->command->alert("This module: Icommercestripe is DISABLED!! , please enable the module and then run the seed");
             exit();
