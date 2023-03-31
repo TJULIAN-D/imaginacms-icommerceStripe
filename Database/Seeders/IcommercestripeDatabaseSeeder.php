@@ -43,6 +43,7 @@ class IcommercestripeDatabaseSeeder extends Seeder
             $options['currency'] = "USD";
             $options['minimunAmount'] = 4000;
             $options['maximumAmount'] = null;
+            $options['showInCurrencies'] = ["COP","USD"];
       
             $titleTrans = 'icommercestripe::icommercestripes.single';
             $descriptionTrans = 'icommercestripe::icommercestripes.description';
